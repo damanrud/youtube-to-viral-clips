@@ -1,0 +1,1453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Viral Clips Extractor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #FAFAF8;
+      --surface: #FFFFFF;
+      --text: #1A1A1A;
+      --text-secondary: #8A8A86;
+      --border: #E8E5E0;
+      --accent: #1A1A1A;
+      --accent-hover: #3A3A3A;
+      --success: #2D7D5F;
+      --focus: #C4A882;
+      --error: #B44A3F;
+      --sidebar-width: 220px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ----- Sidebar ----- */
+    .sidebar {
+      width: var(--sidebar-width);
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 2rem 1rem;
+      height: 100vh;
+      position: sticky;
+      top: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      flex-shrink: 0;
+    }
+    .sidebar .logo {
+      font-family: 'Instrument Serif', serif;
+      font-size: 1.8rem;
+      font-weight: 400;
+      margin-bottom: 2rem;
+      padding-left: 0.5rem;
+      color: var(--text);
+    }
+    .sidebar .nav-item {
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+      font-weight: 500;
+      color: var(--text-secondary);
+      border: none;
+      background: transparent;
+      text-align: left;
+      font-size: 1rem;
+      width: 100%;
+    }
+    .sidebar .nav-item:hover { background: var(--bg); color: var(--text); }
+    .sidebar .nav-item.active { background: var(--accent); color: #fff; }
+    .sidebar .nav-item .icon { margin-right: 0.75rem; }
+
+    .sidebar-divider {
+      margin-top: auto;
+      border-top: 1px solid var(--border);
+      padding-top: 1rem;
+    }
+    .sidebar-account-label {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      margin-bottom: 0.5rem;
+    }
+    .sidebar-account-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      padding: 0.3rem 0;
+      color: var(--text-secondary);
+    }
+    .sidebar-account-item .account-status {
+      flex: 1;
+    }
+    .sidebar-account-item .account-btn {
+      font-size: 0.75rem;
+      padding: 0.2rem 0.6rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: transparent;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+    .sidebar-account-item .account-btn:hover {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    /* ----- Main content ----- */
+    .main-content {
+      flex: 1;
+      padding: 2rem 2.5rem;
+      max-width: calc(100% - var(--sidebar-width));
+      overflow-y: auto;
+    }
+
+    /* ----- Общие стили ----- */
+    .form-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 1.5rem;
+    }
+    .section-label {
+      font-family: 'Instrument Serif', serif;
+      font-size: 1.25rem;
+      font-weight: 400;
+      margin-bottom: 1.25rem;
+    }
+    .source-tabs {
+      display: flex;
+      gap: 0;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+    }
+    .source-tab {
+      flex: 1;
+      padding: 0.625rem 1rem;
+      text-align: center;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      background: var(--bg);
+      border: none;
+      color: var(--text-secondary);
+      transition: background 0.2s, color 0.2s;
+    }
+    .source-tab:not(:last-child) { border-right: 1px solid var(--border); }
+    .source-tab.active { background: var(--surface); color: var(--text); }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: 0.375rem;
+    }
+    input[type="text"], select, textarea {
+      width: 100%;
+      padding: 0.7rem 0.875rem;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      color: var(--text);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--focus);
+      box-shadow: 0 0 0 3px rgba(196,168,130,0.25);
+    }
+    .field-group { margin-bottom: 1.25rem; }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+    .checkbox-row input[type="checkbox"] {
+      width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer;
+    }
+    .checkbox-row label { margin-bottom: 0; font-size: 0.9rem; cursor: pointer; }
+
+    .btn-primary {
+      display: block;
+      width: 100%;
+      padding: 0.85rem 1.5rem;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #fff;
+      background: var(--accent);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+    }
+    .btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+    .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: none; }
+    .btn-small {
+      padding: 0.3rem 0.8rem;
+      font-size: 0.8rem;
+      display: inline-block;
+      width: auto;
+    }
+
+    .local-panel { display: none; }
+    .local-panel.show { display: block; }
+    .upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: 8px;
+      padding: 2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      margin-bottom: 1rem;
+    }
+    .upload-zone:hover { border-color: var(--focus); background: rgba(196,168,130,0.04); }
+    .upload-zone p { color: var(--text-secondary); font-size: 0.9rem; }
+    .upload-zone .upload-icon { font-size: 1.5rem; margin-bottom: 0.5rem; color: var(--text-secondary); }
+    .upload-zone input[type="file"] { display: none; }
+    .upload-filename { font-size: 0.85rem; color: var(--success); margin-top: 0.5rem; }
+
+    /* Progress */
+    #progress-section { display: none; margin-bottom: 2rem; }
+    .progress-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      text-align: center;
+    }
+    .progress-steps {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 1.25rem;
+    }
+    .progress-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--border);
+      transition: background 0.3s;
+    }
+    .progress-dot.active { background: var(--accent); }
+    .progress-dot.done { background: var(--success); }
+    .progress-message { font-size: 1rem; font-weight: 500; margin-bottom: 0.5rem; }
+    .progress-step-label { font-size: 0.85rem; color: var(--text-secondary); }
+
+    /* Непрерывный прогресс-бар с рисками */
+    .progress-container {
+      margin-top: 1rem;
+    }
+    .progress-track {
+      position: relative;
+      width: 100%;
+      height: 12px;
+      background: var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 6px;
+      transition: width 0.8s ease;
+      width: 0%;
+    }
+    .progress-ticks {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+    .tick {
+      position: absolute;
+      top: -2px;
+      width: 2px;
+      height: calc(100% + 4px);
+      background: var(--surface);
+      opacity: 0.6;
+    }
+    .progress-label {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      margin-top: 0.25rem;
+      text-align: center;
+    }
+
+    .download-bar-wrapper { margin-top: 1rem; display: none; }
+    .download-bar-wrapper.show { display: block; }
+    .download-bar-track { width: 100%; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+    .download-bar-fill { height: 100%; width: 0%; background: var(--accent); border-radius: 3px; transition: width 0.3s; }
+    .download-bar-label { font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.375rem; }
+
+    .spinner {
+      display: inline-block;
+      width: 20px; height: 20px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin-bottom: 1rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Results */
+    #results-section { display: none; }
+    .results-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 1.5rem;
+    }
+    .results-header h2 { font-family: 'Instrument Serif', serif; font-weight: 400; font-size: 1.75rem; }
+    .results-header .video-title {
+      font-size: 0.85rem; color: var(--text-secondary);
+      max-width: 50%;
+      text-align: right;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .clips-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+    .clip-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      transition: box-shadow 0.2s;
+    }
+    .clip-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .clip-card video {
+      width: 100%;
+      max-width: 320px;          /* Уменьшаем плеер */
+      border-radius: 6px;
+      margin-bottom: 1rem;
+      background: #000;
+    }
+    .clip-card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+    .clip-number { font-family: 'Instrument Serif', serif; font-size: 1.15rem; }
+    .score-pill {
+      display: inline-flex; align-items: center; gap: 0.25rem;
+      background: var(--accent); color: #fff;
+      font-family: 'Instrument Serif', serif;
+      font-size: 0.9rem;
+      padding: 0.2rem 0.75rem;
+      border-radius: 999px;
+    }
+    .clip-meta { display: flex; gap: 1.5rem; margin-bottom: 0.75rem; font-size: 0.85rem; color: var(--text-secondary); }
+    .clip-title { font-family: 'Instrument Serif', serif; font-size: 1.15rem; font-weight: 400; margin-bottom: 0.5rem; line-height: 1.3; }
+    .clip-reason { font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 1rem; line-height: 1.5; }
+    .clip-description {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      margin-bottom: 1rem;
+      font-size: 0.85rem;
+      color: var(--text);
+      line-height: 1.5;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .clip-description:hover { border-color: var(--focus); }
+    .clip-description .copy-hint { display: block; font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.375rem; }
+    .clip-description.copied { border-color: var(--success); }
+    .clip-description.copied .copy-hint { color: var(--success); }
+
+    .clip-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-top: 0.5rem;
+    }
+    .restyle-select {
+      padding: 0.5rem 0.75rem;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.8rem;
+      color: var(--text);
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      outline: none;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .restyle-select:focus { border-color: var(--focus); }
+    .restyle-select:disabled { opacity: 0.5; cursor: wait; }
+
+    /* Убираем кнопку скачивания, поэтому стиль для .btn-download не нужен */
+
+    .publish-section {
+      display: none;
+      margin-top: 2rem;
+      padding: 1.5rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+    .publish-section h3 {
+      font-family: 'Instrument Serif', serif;
+      font-weight: 400;
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .reset-row { text-align: center; margin-top: 2rem; }
+    .btn-reset {
+      padding: 0.65rem 1.5rem;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      background: transparent;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .btn-reset:hover { border-color: var(--text-secondary); color: var(--text); }
+
+    .error-banner {
+      display: none;
+      background: #FEF2F1;
+      color: var(--error);
+      border: 1px solid #F0CECA;
+      border-radius: 8px;
+      padding: 0.85rem 1.25rem;
+      font-size: 0.9rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .advanced-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-bottom: 1.25rem;
+      user-select: none;
+      transition: color 0.2s;
+    }
+    .advanced-toggle:hover { color: var(--text); }
+    .advanced-toggle svg { width: 16px; height: 16px; transition: transform 0.25s; }
+    .advanced-toggle.open svg { transform: rotate(90deg); }
+    .advanced-options { display: none; }
+    .advanced-options.show { display: block; }
+
+    @media (max-width: 768px) {
+      body { flex-direction: column; }
+      .sidebar {
+        width: 100%;
+        height: auto;
+        flex-direction: row;
+        padding: 1rem;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: var(--surface);
+        gap: 0.5rem;
+        flex-wrap: wrap;
+      }
+      .sidebar .logo { display: none; }
+      .sidebar .nav-item { flex: 1; text-align: center; padding: 0.5rem; font-size: 0.9rem; }
+      .sidebar-divider { margin-top: 0; padding-top: 0; border-top: none; }
+      .main-content { max-width: 100%; padding: 1.5rem; }
+      .clip-card video { max-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Боковая панель -->
+  <nav class="sidebar">
+    <div class="logo">🎬 Viral</div>
+    <button class="nav-item active" data-tab="shorts">
+      <span class="icon">✂️</span> Shorts Maker
+    </button>
+    <button class="nav-item" data-tab="stream">
+      <span class="icon">🎥</span> Stream Mode
+    </button>
+
+    <div class="sidebar-divider">
+      <div class="sidebar-account-label">Аккаунты</div>
+      <div class="sidebar-account-item">
+        <span class="account-status" id="youtube-sidebar-text">❌ YouTube</span>
+        <button class="account-btn" id="youtube-sidebar-btn">Войти</button>
+      </div>
+      <div class="sidebar-account-item">
+        <span class="account-status" id="tiktok-sidebar-text">⏳ TikTok (скоро)</span>
+        <button class="account-btn" id="tiktok-sidebar-btn" style="display:none;">Войти</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Основной контент -->
+  <main class="main-content">
+
+    <!-- ===== ВКЛАДКА SHORTS MAKER ===== -->
+    <div id="tab-shorts" class="tab-content active">
+      <header style="margin-bottom:2rem;">
+        <h1 style="font-family:'Instrument Serif',serif;font-weight:400;font-style:italic;font-size:2.5rem;">Shorts Maker</h1>
+        <p style="color:var(--text-secondary);">Вырезайте вирусные моменты из видео</p>
+      </header>
+
+      <div id="error-banner" class="error-banner"></div>
+
+      <!-- Форма -->
+      <div id="form-section">
+        <div class="form-section">
+          <div class="section-label">Video Source</div>
+          <div class="source-tabs">
+            <button class="source-tab active" data-source="youtube" type="button">YouTube URL</button>
+            <button class="source-tab" data-source="local" type="button">Local File</button>
+          </div>
+          <div id="youtube-panel">
+            <div class="field-group">
+              <label for="url-input">YouTube URL</label>
+              <input type="text" id="url-input" placeholder="https://www.youtube.com/watch?v=...">
+            </div>
+            <div class="field-group">
+              <label for="quality-select">Video Quality</label>
+              <select id="quality-select">
+                <option value="best" selected>Best available</option>
+                <option value="1080p">1080p</option>
+                <option value="720p">720p</option>
+                <option value="480p">480p</option>
+              </select>
+            </div>
+          </div>
+          <div id="local-panel" class="local-panel">
+            <div class="field-group">
+              <label for="local-select">Select from downloads</label>
+              <select id="local-select"><option value="">Loading...</option></select>
+            </div>
+            <div style="text-align:center;color:var(--text-secondary);font-size:0.85rem;margin:0.75rem 0;">or</div>
+            <div class="upload-zone" id="upload-zone">
+              <div class="upload-icon">
+                <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M12 16V4m0 0L8 8m4-4 4 4" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 16v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </div>
+              <p>Drop a video file or click to browse</p>
+              <div class="upload-filename" id="upload-filename"></div>
+              <input type="file" id="file-input" accept=".mp4,.webm,.mkv">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="advanced-toggle" id="advanced-toggle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            <span>Варианты обработки</span>
+          </div>
+          <div class="advanced-options" id="advanced-options">
+            <div class="field-row" style="margin-bottom:1rem;">
+              <div class="field-group">
+                <label for="provider-select">AI Provider</label>
+                <select id="provider-select">
+                  <option value="ollama">Ollama (local)</option>
+                  <option value="openai" selected>OpenAI</option>
+                  <option value="anthropic">Anthropic</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label for="score-select">Min. Virality Score</label>
+                <select id="score-select">
+                  <option value="5">5.0</option><option value="6">6.0</option><option value="6.5">6.5</option>
+                  <option value="7" selected>7.0</option><option value="7.5">7.5</option>
+                  <option value="8">8.0</option><option value="9">9.0</option>
+                </select>
+              </div>
+            </div>
+            <div class="checkbox-row">
+              <input type="checkbox" id="vertical-check" checked>
+              <label for="vertical-check">Vertical format (9:16)</label>
+            </div>
+            <div class="checkbox-row">
+              <input type="checkbox" id="subtitles-check" checked>
+              <label for="subtitles-check">Add subtitles</label>
+            </div>
+            <div class="field-group" style="margin-top:0.75rem;">
+              <label for="banner-select">Баннер (сверху, 30%):</label>
+              <select id="banner-select" name="banner">
+                <option value="none">Без баннера</option>
+              </select>
+            </div>
+            <div class="field-group" id="subtitle-style-group" style="margin-top:0.75rem;">
+              <label for="style-select">Subtitle Style</label>
+              <select id="style-select">
+                <option value="Submagic Yellow" selected>Submagic Yellow</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn-primary" id="submit-btn">Extract Viral Clips</button>
+      </div>
+
+      <!-- Прогресс -->
+      <div id="progress-section">
+        <div class="progress-card">
+          <div class="spinner"></div>
+          <div class="progress-steps">
+            <div class="progress-dot" id="dot-1"></div>
+            <div class="progress-dot" id="dot-2"></div>
+            <div class="progress-dot" id="dot-3"></div>
+            <div class="progress-dot" id="dot-4"></div>
+            <div class="progress-dot" id="dot-5"></div>
+          </div>
+          <div class="progress-message" id="progress-message">Starting...</div>
+          <div class="progress-step-label" id="progress-step-label">Step 1 of 5</div>
+          <div class="progress-container">
+            <div class="progress-track">
+              <div class="progress-fill" id="overall-progress-fill" style="width: 0%;"></div>
+              <div class="progress-ticks">
+                <div class="tick" style="left: 20%;"></div>
+                <div class="tick" style="left: 40%;"></div>
+                <div class="tick" style="left: 60%;"></div>
+                <div class="tick" style="left: 80%;"></div>
+              </div>
+            </div>
+            <div class="progress-label" id="overall-progress-label">0%</div>
+          </div>
+          <div class="download-bar-wrapper" id="download-bar">
+            <div class="download-bar-track"><div class="download-bar-fill" id="download-bar-fill"></div></div>
+            <div class="download-bar-label" id="download-bar-label"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Результаты -->
+      <div id="results-section">
+        <div class="results-header">
+          <h2>Your Clips</h2>
+          <div class="video-title" id="result-video-title"></div>
+        </div>
+        <div class="clips-grid" id="clips-grid"></div>
+
+        <!-- Секция публикации (общая, оставлена для ручного ввода) -->
+        <div id="publish-section" class="publish-section">
+          <h3>Опубликовать видео (ручной ввод)</h3>
+          <div class="field-group">
+            <label for="pub-title">Название:</label>
+            <input type="text" id="pub-title" placeholder="Введите название">
+          </div>
+          <div class="field-group">
+            <label for="pub-desc">Описание:</label>
+            <textarea id="pub-desc" rows="3" style="width:100%; padding:0.7rem 0.875rem; border:1px solid var(--border); border-radius:8px; font-family:'DM Sans',sans-serif; font-size:0.95rem;"></textarea>
+          </div>
+          <div class="field-group">
+            <label for="pub-tags">Хэштеги (через запятую):</label>
+            <input type="text" id="pub-tags" placeholder="#видео #shorts">
+          </div>
+          <div class="field-group">
+            <label for="pub-platform">Платформа:</label>
+            <select id="pub-platform">
+              <option value="youtube">YouTube (черновик)</option>
+              <option value="tiktok">TikTok</option>
+            </select>
+          </div>
+          <div style="display:flex; gap:1rem; flex-wrap:wrap;">
+            <button id="pub-btn" class="btn-primary" style="display:inline-block;width:auto;flex:1;">Опубликовать</button>
+            <button id="save-txt-btn" class="btn-primary" style="display:inline-block;width:auto;flex:1;">Сохранить TXT</button>
+          </div>
+        </div>
+
+        <div class="reset-row">
+          <button class="btn-reset" id="reset-btn">Process Another Video</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== ВКЛАДКА STREAM MODE ===== -->
+    <div id="tab-stream" class="tab-content">
+      <header style="margin-bottom:2rem;">
+        <h1 style="font-family:'Instrument Serif',serif;font-weight:400;font-style:italic;font-size:2.5rem;">🎥 Stream Mode</h1>
+        <p style="color:var(--text-secondary);">Превратите стрим в вертикальные клипы с веб-камерой стримера</p>
+      </header>
+      <div class="form-section">
+        <div class="field-group">
+          <label for="stream-source">Источник стрима:</label>
+          <input type="text" id="stream-source" placeholder="Ссылка на Twitch VOD или путь к локальному файлу">
+        </div>
+        <div class="field-group">
+          <label for="streamer-name">Имя стримера (для заголовка):</label>
+          <input type="text" id="streamer-name" placeholder="Например: xQc">
+        </div>
+        <button id="process-stream-btn" class="btn-primary">Обработать стрим</button>
+      </div>
+      <div id="stream-progress" style="display:none; text-align:center; padding:2rem;">
+        <div class="spinner"></div>
+        <p id="stream-status">Обработка...</p>
+        <div class="progress-container">
+          <div class="progress-track">
+            <div class="progress-fill" id="stream-progress-fill" style="width: 0%;"></div>
+            <div class="progress-ticks">
+              <div class="tick" style="left: 20%;"></div>
+              <div class="tick" style="left: 40%;"></div>
+              <div class="tick" style="left: 60%;"></div>
+              <div class="tick" style="left: 80%;"></div>
+            </div>
+          </div>
+          <div class="progress-label" id="stream-progress-label">0%</div>
+        </div>
+      </div>
+      <div id="stream-results" style="display:none; margin-top:2rem;">
+        <h3 style="margin-bottom:1rem;">Готовые клипы</h3>
+        <div id="stream-clips-grid" class="clips-grid"></div>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    // ---- Переключение вкладок ----
+    const navItems = document.querySelectorAll('.nav-item');
+    const tabContents = {
+      shorts: document.getElementById('tab-shorts'),
+      stream: document.getElementById('tab-stream')
+    };
+    navItems.forEach(item => {
+      item.addEventListener('click', function() {
+        navItems.forEach(i => i.classList.remove('active'));
+        this.classList.add('active');
+        const tab = this.dataset.tab;
+        Object.keys(tabContents).forEach(key => {
+          tabContents[key].classList.toggle('active', key === tab);
+        });
+      });
+    });
+
+    // ---- Общее состояние ----
+    let state = 'idle';
+    let currentSource = 'youtube';
+    let uploadedFilename = null;
+    let currentSessionId = null;
+    let loadedStyles = {};
+    let currentVideoPath = null;
+
+    const $ = (sel) => document.querySelector(sel);
+    const $$ = (sel) => document.querySelectorAll(sel);
+    const formSection = $('#form-section');
+    const progressSec = $('#progress-section');
+    const resultsSec = $('#results-section');
+    const errorBanner = $('#error-banner');
+    const submitBtn = $('#submit-btn');
+    const resetBtn = $('#reset-btn');
+
+    // ---- Source tabs ----
+    $$('.source-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        $$('.source-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        currentSource = tab.dataset.source;
+        $('#youtube-panel').style.display = currentSource === 'youtube' ? 'block' : 'none';
+        $('#local-panel').classList.toggle('show', currentSource === 'local');
+        if (currentSource === 'local') loadDownloads();
+      });
+    });
+
+    // ---- Advanced toggle ----
+    const advToggle = document.getElementById('advanced-toggle');
+    const advOptions = document.getElementById('advanced-options');
+    advToggle.addEventListener('click', () => {
+      advToggle.classList.toggle('open');
+      advOptions.classList.toggle('show');
+    });
+
+    $('#subtitles-check').addEventListener('change', (e) => {
+      $('#subtitle-style-group').style.display = e.target.checked ? 'block' : 'none';
+    });
+
+    // ---- Upload zone ----
+    const uploadZone = $('#upload-zone');
+    const fileInput = $('#file-input');
+    uploadZone.addEventListener('click', () => fileInput.click());
+    uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.style.borderColor = 'var(--focus)'; });
+    uploadZone.addEventListener('dragleave', () => { uploadZone.style.borderColor = ''; });
+    uploadZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadZone.style.borderColor = '';
+      if (e.dataTransfer.files.length) {
+        fileInput.files = e.dataTransfer.files;
+        handleFileSelect(e.dataTransfer.files[0]);
+      }
+    });
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files.length) handleFileSelect(fileInput.files[0]);
+    });
+
+    async function handleFileSelect(file) {
+      $('#upload-filename').textContent = `Uploading ${file.name}...`;
+      const fd = new FormData();
+      fd.append('file', file);
+      try {
+        const res = await fetch('/api/upload', { method: 'POST', body: fd });
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+        uploadedFilename = data.filename;
+        $('#upload-filename').textContent = `Ready: ${data.filename}`;
+      } catch (err) {
+        showError(err.message);
+        $('#upload-filename').textContent = '';
+      }
+    }
+
+    // ---- Load styles, downloads, banners ----
+    async function loadStyles() {
+      try {
+        const res = await fetch('/api/subtitle-styles');
+        const styles = await res.json();
+        loadedStyles = styles;
+        const sel = $('#style-select');
+        sel.innerHTML = '';
+        for (const [name, desc] of Object.entries(styles)) {
+          const opt = document.createElement('option');
+          opt.value = name;
+          opt.textContent = `${name} — ${desc}`;
+          if (name === 'Submagic Yellow') opt.selected = true;
+          sel.appendChild(opt);
+        }
+      } catch (_) {}
+    }
+
+    async function loadDownloads() {
+      try {
+        const res = await fetch('/api/downloads');
+        const files = await res.json();
+        const sel = $('#local-select');
+        sel.innerHTML = '';
+        if (files.length === 0) {
+          const opt = document.createElement('option');
+          opt.value = '';
+          opt.textContent = 'No video files in /downloads';
+          sel.appendChild(opt);
+        } else {
+          files.forEach(f => {
+            const opt = document.createElement('option');
+            opt.value = f;
+            opt.textContent = f;
+            sel.appendChild(opt);
+          });
+        }
+      } catch (_) {}
+    }
+
+    async function loadBanners() {
+      try {
+        const res = await fetch('/api/banners');
+        const banners = await res.json();
+        const sel = $('#banner-select');
+        banners.forEach(banner => {
+          const opt = document.createElement('option');
+          opt.value = banner;
+          opt.textContent = banner;
+          sel.appendChild(opt);
+        });
+      } catch (err) {
+        console.warn('Could not load banners:', err);
+      }
+    }
+
+    // ---- Submit ----
+    submitBtn.addEventListener('click', () => {
+      if (state === 'processing') return;
+      hideError();
+      const payload = {
+        source: currentSource,
+        url: currentSource === 'youtube' ? $('#url-input').value.trim() : '',
+        local_file: '',
+        quality: $('#quality-select').value,
+        provider: $('#provider-select').value,
+        min_score: parseFloat($('#score-select').value),
+        vertical_format: $('#vertical-check').checked,
+        add_subtitles: $('#subtitles-check').checked,
+        subtitle_style: $('#style-select').value,
+        banner: $('#banner-select').value,
+      };
+      if (currentSource === 'youtube' && !payload.url) {
+        showError('Please enter a YouTube URL.');
+        return;
+      }
+      if (currentSource === 'local') {
+        if (uploadedFilename) {
+          payload.local_file = uploadedFilename;
+        } else {
+          const localVal = $('#local-select').value;
+          if (!localVal) {
+            showError('Please select or upload a video file.');
+            return;
+          }
+          payload.local_file = localVal;
+        }
+      }
+      startProcessing(payload);
+    });
+
+    // ---- Processing ----
+    function startProcessing(payload) {
+      state = 'processing';
+      formSection.style.display = 'none';
+      progressSec.style.display = 'block';
+      resultsSec.style.display = 'none';
+      submitBtn.disabled = true;
+      for (let i = 1; i <= 5; i++) {
+        $(`#dot-${i}`).className = 'progress-dot';
+      }
+      $('#progress-message').textContent = 'Starting...';
+      $('#progress-step-label').textContent = '';
+      $('#download-bar').classList.remove('show');
+      $('#download-bar-fill').style.width = '0%';
+      const fill = document.getElementById('overall-progress-fill');
+      const label = document.getElementById('overall-progress-label');
+      if (fill) fill.style.width = '0%';
+      if (label) label.textContent = '0%';
+
+      fetch('/api/process', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      }).then(response => {
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        function read() {
+          reader.read().then(({ done, value }) => {
+            if (done) {
+              if (state === 'processing') {
+                showError('Connection closed unexpectedly.');
+                resetToForm();
+              }
+              return;
+            }
+            buffer += decoder.decode(value, { stream: true });
+            const parts = buffer.split('\n\n');
+            buffer = parts.pop();
+            for (const part of parts) {
+              const lines = part.split('\n');
+              let event = 'message';
+              let data = '';
+              for (const line of lines) {
+                if (line.startsWith('event: ')) event = line.slice(7);
+                if (line.startsWith('data: ')) data = line.slice(6);
+              }
+              if (data) handleSSE(event, JSON.parse(data));
+            }
+            read();
+          }).catch(err => {
+            if (state === 'processing') {
+              showError('Connection error: ' + err.message);
+              resetToForm();
+            }
+          });
+        }
+        read();
+      }).catch(err => {
+        showError('Request failed: ' + err.message);
+        resetToForm();
+      });
+    }
+
+    function handleSSE(event, data) {
+      if (event === 'progress') {
+        const { step, total, message, percent } = data;
+        if (step > 1) {
+          $('#download-bar').classList.remove('show');
+        }
+        for (let i = 1; i <= total; i++) {
+          const dot = $(`#dot-${i}`);
+          if (i < step) dot.className = 'progress-dot done';
+          else if (i === step) dot.className = 'progress-dot active';
+          else dot.className = 'progress-dot';
+        }
+        $('#progress-message').textContent = message;
+        $('#progress-step-label').textContent = `Step ${step} of ${total}`;
+        let p = 0;
+        if (percent !== undefined) {
+          p = Math.min(100, Math.max(0, percent));
+        } else {
+          p = Math.round((step / total) * 100);
+        }
+        const fill = document.getElementById('overall-progress-fill');
+        const label = document.getElementById('overall-progress-label');
+        if (fill) fill.style.width = p + '%';
+        if (label) label.textContent = p + '%';
+      } else if (event === 'download_progress') {
+        const { percent, downloaded, total } = data;
+        const bar = $('#download-bar');
+        bar.classList.add('show');
+        $('#download-bar-fill').style.width = percent + '%';
+        if (total > 0) {
+          const dlMB = (downloaded / 1048576).toFixed(1);
+          const totalMB = (total / 1048576).toFixed(1);
+          $('#download-bar-label').textContent = `${dlMB} MB / ${totalMB} MB (${percent}%)`;
+        } else {
+          const dlMB = (downloaded / 1048576).toFixed(1);
+          $('#download-bar-label').textContent = `${dlMB} MB downloaded`;
+        }
+      } else if (event === 'done') {
+        state = 'done';
+        currentSessionId = data.session_id || null;
+        progressSec.style.display = 'none';
+        showResults(data);
+      } else if (event === 'error') {
+        showError(data.message);
+        resetToForm();
+      }
+    }
+
+    // ---- Глобальные переменные для публикации клипов ----
+    let _clipsData = [];
+
+    // ---- Функция публикации отдельного клипа ----
+    async function publishClip(index) {
+      const clip = _clipsData[index];
+      if (!clip || !clip.path) {
+        alert('Видео не найдено');
+        return;
+      }
+
+      // Проверяем авторизацию
+      try {
+        const statusRes = await fetch('/api/youtube/status');
+        const statusData = await statusRes.json();
+        if (!statusData.authenticated) {
+          alert('Пожалуйста, сначала войдите в YouTube (кнопка в сайдбаре).');
+          return;
+        }
+      } catch (e) {
+        alert('Ошибка проверки авторизации');
+        return;
+      }
+
+      const title = clip.title || 'Viral Clip';
+      const description = clip.description || '';
+      const tags = ['#shorts', '#viral']; // можно взять из clip, если есть
+
+      try {
+        const response = await fetch('/api/publish', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            video_path: clip.path,
+            title: title,
+            description: description,
+            tags: tags,
+            platform: 'youtube',
+            privacy: 'private'  // черновик
+          })
+        });
+        const data = await response.json();
+        if (data.status === 'ok') {
+          alert('✅ Видео сохранено в черновики YouTube!');
+        } else {
+          alert('❌ Ошибка: ' + (data.error || 'Неизвестная ошибка'));
+        }
+      } catch (err) {
+        alert('❌ Ошибка запроса: ' + err.message);
+      }
+    }
+
+    // ---- Отображение результатов (с видеоплеером и кнопкой публикации) ----
+    function showResults(data) {
+      resultsSec.style.display = 'block';
+      $('#result-video-title').textContent = data.title || '';
+      const grid = $('#clips-grid');
+      grid.innerHTML = '';
+      _clipsData = data.clips;  // сохраняем все клипы
+
+      data.clips.forEach((clip, i) => {
+        const startStr = formatTime(clip.start);
+        const endStr = formatTime(clip.end);
+        const card = document.createElement('div');
+        card.className = 'clip-card';
+
+        // Видео
+        const videoWrapper = document.createElement('div');
+        videoWrapper.style.marginBottom = '0.75rem';
+        const video = document.createElement('video');
+        video.controls = true;
+        video.style.width = '100%';
+        video.style.maxWidth = '320px';
+        video.style.borderRadius = '6px';
+        video.style.background = '#000';
+        const source = document.createElement('source');
+        source.src = `/api/clips/${encodeURIComponent(clip.filename)}`;
+        source.type = 'video/mp4';
+        video.appendChild(source);
+        videoWrapper.appendChild(video);
+        card.appendChild(videoWrapper);
+
+        // Информация
+        const infoHtml = `
+          <div class="clip-card-top">
+            <div class="clip-number">Clip ${i + 1}</div>
+            <div class="score-pill">${clip.score.toFixed(1)}</div>
+          </div>
+          ${clip.title ? `<div class="clip-title">${escapeHtml(clip.title)}</div>` : ''}
+          <div class="clip-meta">
+            <span>${clip.duration.toFixed(1)}s</span>
+            <span>${startStr} &mdash; ${endStr}</span>
+          </div>
+          ${clip.reason ? `<div class="clip-reason">${escapeHtml(clip.reason)}</div>` : ''}
+          ${clip.description ? `<div class="clip-description" onclick="copyText(this, '${escapeAttr(clip.description)}')">
+            ${escapeHtml(clip.description)}
+            <span class="copy-hint">Click to copy</span>
+          </div>` : ''}
+          <div class="clip-actions">
+            <select class="restyle-select" id="restyle-${i}" onchange="restyleClip(${i}, this)">
+              <option value="" disabled selected>Change style...</option>
+              ${Object.entries(loadedStyles).map(([name, desc]) =>
+                `<option value="${escapeAttr(name)}">${escapeHtml(name)}</option>`
+              ).join('')}
+            </select>
+            <button class="btn-primary btn-small" onclick="publishClip(${i})">Сохранить в черновик YouTube</button>
+          </div>
+        `;
+        const infoDiv = document.createElement('div');
+        infoDiv.innerHTML = infoHtml;
+        while (infoDiv.firstChild) {
+          card.appendChild(infoDiv.firstChild);
+        }
+        grid.appendChild(card);
+      });
+
+      // Показываем общую секцию публикации (для ручного ввода)
+      if (data.clips && data.clips.length > 0) {
+        const pubSection = document.getElementById('publish-section');
+        if (pubSection) pubSection.style.display = 'block';
+        // сохраняем путь к первому видео для общей публикации
+        currentVideoPath = data.clips[0].path;
+      }
+    }
+
+    // ---- reset ----
+    resetBtn.addEventListener('click', resetToForm);
+    function resetToForm() {
+      state = 'idle';
+      currentSessionId = null;
+      currentVideoPath = null;
+      _clipsData = [];
+      formSection.style.display = 'block';
+      progressSec.style.display = 'none';
+      resultsSec.style.display = 'none';
+      submitBtn.disabled = false;
+      uploadedFilename = null;
+      $('#upload-filename').textContent = '';
+    }
+
+    // ---- helpers ----
+    function showError(msg) {
+      errorBanner.textContent = msg;
+      errorBanner.style.display = 'block';
+    }
+    function hideError() {
+      errorBanner.style.display = 'none';
+    }
+    function formatTime(s) {
+      const m = Math.floor(s / 60);
+      const sec = Math.floor(s % 60);
+      return `${m}:${sec.toString().padStart(2, '0')}`;
+    }
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+    function escapeAttr(str) {
+      return str.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, '\\n');
+    }
+
+    async function restyleClip(clipIndex, selectEl) {
+      if (!currentSessionId) return;
+      const style = selectEl.value;
+      if (!style) return;
+      selectEl.disabled = true;
+      const prevText = selectEl.options[selectEl.selectedIndex].text;
+      selectEl.options[selectEl.selectedIndex].text = 'Restyling...';
+      try {
+        const res = await fetch('/api/restyle', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session_id: currentSessionId, clip_index: clipIndex, style }),
+        });
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+        // Обновляем ссылку на видео (если нужно)
+        const dlLink = document.querySelector(`#dl-clip-${clipIndex}`);
+        if (dlLink) dlLink.href = `/api/clips/${encodeURIComponent(data.filename)}`;
+        // Также обновляем плеер, если есть
+        const card = selectEl.closest('.clip-card');
+        if (card) {
+          const video = card.querySelector('video');
+          if (video) {
+            const source = video.querySelector('source');
+            if (source) {
+              source.src = `/api/clips/${encodeURIComponent(data.filename)}`;
+              video.load();
+            }
+          }
+        }
+      } catch (err) {
+        showError('Restyle failed: ' + err.message);
+      } finally {
+        selectEl.disabled = false;
+        selectEl.options[selectEl.selectedIndex].text = prevText;
+        selectEl.value = '';
+      }
+    }
+
+    function copyText(el, text) {
+      const decoded = text.replace(/\\n/g, '\n').replace(/\\'/g, "'").replace(/\\\\/g, '\\');
+      navigator.clipboard.writeText(decoded).then(() => {
+        el.classList.add('copied');
+        const hint = el.querySelector('.copy-hint');
+        if (hint) hint.textContent = 'Copied!';
+        setTimeout(() => {
+          el.classList.remove('copied');
+          if (hint) hint.textContent = 'Click to copy';
+        }, 2000);
+      });
+    }
+
+    // ---- Обработчики общей публикации ----
+    document.getElementById('pub-btn').addEventListener('click', async function() {
+      if (!currentVideoPath) { alert('Нет готового видео'); return; }
+      const title = document.getElementById('pub-title').value || '';
+      const desc = document.getElementById('pub-desc').value || '';
+      const tagsRaw = document.getElementById('pub-tags').value || '';
+      const tags = tagsRaw.split(',').map(s => s.trim()).filter(s => s);
+      const platform = document.getElementById('pub-platform').value;
+      try {
+        const response = await fetch('/api/publish', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ video_path: currentVideoPath, title, description: desc, tags, platform, privacy: 'private' })
+        });
+        const data = await response.json();
+        if (data.status === 'ok') {
+          alert('✅ Опубликовано! TXT сохранён: ' + data.txt_path);
+        } else {
+          alert('❌ Ошибка: ' + (data.error || 'Неизвестная ошибка'));
+        }
+      } catch (err) {
+        alert('❌ Ошибка запроса: ' + err.message);
+      }
+    });
+
+    document.getElementById('save-txt-btn').addEventListener('click', async function() {
+      if (!currentVideoPath) { alert('Нет готового видео'); return; }
+      const title = document.getElementById('pub-title').value || 'Без названия';
+      const desc = document.getElementById('pub-desc').value || '';
+      const tagsRaw = document.getElementById('pub-tags').value || '';
+      const tags = tagsRaw.split(',').map(s => s.trim()).filter(s => s);
+      const platform = document.getElementById('pub-platform').value;
+      try {
+        const response = await fetch('/api/publish', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ video_path: currentVideoPath, title, description: desc, tags, platform, save_only: true })
+        });
+        const data = await response.json();
+        if (data.status === 'ok') {
+          alert('✅ TXT сохранён: ' + data.txt_path);
+        } else {
+          alert('❌ Ошибка: ' + (data.error || 'Неизвестная ошибка'));
+        }
+      } catch (err) {
+        alert('❌ Ошибка запроса: ' + err.message);
+      }
+    });
+
+    // ---- YouTube sidebar auth ----
+    async function updateYoutubeSidebarStatus() {
+      try {
+        const res = await fetch('/api/youtube/status');
+        const data = await res.json();
+        const statusEl = document.getElementById('youtube-sidebar-text');
+        const btnEl = document.getElementById('youtube-sidebar-btn');
+        if (data.authenticated) {
+          statusEl.textContent = '✅ YouTube';
+          btnEl.textContent = 'Выйти';
+          btnEl.onclick = () => {
+            fetch('/api/youtube/logout', { method: 'POST' }).then(() => location.reload());
+          };
+        } else {
+          statusEl.textContent = '❌ YouTube';
+          btnEl.textContent = 'Войти';
+          btnEl.onclick = () => {
+            window.location.href = '/api/youtube/auth';
+          };
+        }
+      } catch (err) {
+        console.warn('YouTube auth status check failed', err);
+      }
+    }
+
+    async function updateTiktokSidebarStatus() {
+      const statusEl = document.getElementById('tiktok-sidebar-text');
+      const btnEl = document.getElementById('tiktok-sidebar-btn');
+      if (statusEl) statusEl.textContent = '⏳ TikTok (скоро)';
+      if (btnEl) btnEl.style.display = 'none';
+    }
+
+    // ---- Stream Mode ----
+    document.getElementById('process-stream-btn').addEventListener('click', function() {
+      const source = document.getElementById('stream-source').value.trim();
+      const streamerName = document.getElementById('streamer-name').value.trim();
+      if (!source) { alert('Введите ссылку или путь к файлу'); return; }
+      if (!streamerName) { alert('Введите имя стримера'); return; }
+
+      const btn = this;
+      btn.disabled = true;
+      const progressDiv = document.getElementById('stream-progress');
+      progressDiv.style.display = 'block';
+      document.getElementById('stream-status').textContent = 'Начинаем обработку...';
+      document.getElementById('stream-results').style.display = 'none';
+
+      const fill = document.getElementById('stream-progress-fill');
+      const label = document.getElementById('stream-progress-label');
+      if (fill) fill.style.width = '0%';
+      if (label) label.textContent = '0%';
+
+      fetch('/api/process_stream', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ source, streamer_name: streamerName })
+      }).then(response => {
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        function read() {
+          reader.read().then(({ done, value }) => {
+            if (done) {
+              if (progressDiv.style.display !== 'none') {
+                alert('Соединение закрыто неожиданно.');
+                resetStreamState();
+              }
+              return;
+            }
+            buffer += decoder.decode(value, { stream: true });
+            const parts = buffer.split('\n\n');
+            buffer = parts.pop();
+            for (const part of parts) {
+              const lines = part.split('\n');
+              let event = 'message';
+              let data = '';
+              for (const line of lines) {
+                if (line.startsWith('event: ')) event = line.slice(7);
+                if (line.startsWith('data: ')) data = line.slice(6);
+              }
+              if (data) handleStreamSSE(event, JSON.parse(data));
+            }
+            read();
+          }).catch(err => {
+            alert('Ошибка соединения: ' + err.message);
+            resetStreamState();
+          });
+        }
+        read();
+      }).catch(err => {
+        alert('Ошибка запроса: ' + err.message);
+        resetStreamState();
+      });
+    });
+
+    function resetStreamState() {
+      const btn = document.getElementById('process-stream-btn');
+      btn.disabled = false;
+      document.getElementById('stream-progress').style.display = 'none';
+    }
+
+    function handleStreamSSE(event, data) {
+      if (event === 'progress') {
+        const { step, total, message, percent } = data;
+        document.getElementById('stream-status').textContent = `Шаг ${step} из ${total}: ${message}`;
+        let p = 0;
+        if (percent !== undefined) {
+          p = Math.min(100, Math.max(0, percent));
+        } else {
+          p = Math.round((step / total) * 100);
+        }
+        const fill = document.getElementById('stream-progress-fill');
+        const label = document.getElementById('stream-progress-label');
+        if (fill) fill.style.width = p + '%';
+        if (label) label.textContent = p + '%';
+      } else if (event === 'done') {
+        document.getElementById('stream-status').textContent = 'Готово!';
+        const grid = document.getElementById('stream-clips-grid');
+        grid.innerHTML = '';
+        data.clips.forEach((clip, i) => {
+          const card = document.createElement('div');
+          card.className = 'clip-card';
+          card.innerHTML = `
+            <div class="clip-card-top">
+              <div class="clip-number">Клип ${i+1}</div>
+              <div style="color:var(--text-secondary);font-size:0.85rem;">${clip.duration.toFixed(1)}s</div>
+            </div>
+            <div class="clip-meta">
+              <span>${formatTime(clip.start_time)} — ${formatTime(clip.end_time)}</span>
+            </div>
+            <div style="margin-top:0.5rem;">
+              <a class="btn-download" href="/api/clips/${encodeURIComponent(clip.filename)}" download>⬇ Скачать</a>
+            </div>
+          `;
+          grid.appendChild(card);
+        });
+        document.getElementById('stream-results').style.display = 'block';
+        document.getElementById('process-stream-btn').disabled = false;
+        document.getElementById('stream-progress').style.display = 'none';
+      } else if (event === 'error') {
+        alert('Ошибка: ' + data.message);
+        resetStreamState();
+      }
+    }
+
+    // ---- Инициализация ----
+    loadStyles();
+    loadBanners();
+    loadDownloads();
+    updateYoutubeSidebarStatus();
+    updateTiktokSidebarStatus();
+  </script>
+</body>
+</html>

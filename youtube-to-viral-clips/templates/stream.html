@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stream Mode</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #FAFAF8;
+      --surface: #FFFFFF;
+      --text: #1A1A1A;
+      --text-secondary: #8A8A86;
+      --border: #E8E5E0;
+      --accent: #1A1A1A;
+      --success: #2D7D5F;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+    main { max-width: 780px; margin: 0 auto; padding: 3rem 1.5rem; }
+    header { text-align: center; margin-bottom: 3rem; }
+    header h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
+    .form-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 1.5rem;
+    }
+    .field-group { margin-bottom: 1.25rem; }
+    label { display: block; font-size: 0.85rem; font-weight: 500; color: var(--text-secondary); margin-bottom: 0.375rem; }
+    input, select {
+      width: 100%;
+      padding: 0.7rem 0.875rem;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      outline: none;
+    }
+    input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(26,26,26,0.1); }
+    .btn-primary {
+      display: block;
+      width: 100%;
+      padding: 0.85rem;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #fff;
+      background: var(--accent);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-primary:hover { background: #3A3A3A; }
+    .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+    .clips-grid { display: grid; gap: 1rem; }
+    .clip-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+    .clip-card-top { display: flex; justify-content: space-between; margin-bottom: 0.75rem; }
+    .clip-number { font-weight: 600; }
+    .clip-meta { display: flex; gap: 1.5rem; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.75rem; }
+    .btn-download {
+      display: inline-block;
+      padding: 0.55rem 1.25rem;
+      font-weight: 500;
+      color: var(--accent);
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      text-decoration: none;
+      transition: background 0.2s, color 0.2s;
+    }
+    .btn-download:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin-bottom: 1rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .back-link { display: inline-block; margin-bottom: 1rem; color: var(--text-secondary); text-decoration: none; }
+    .back-link:hover { color: var(--text); }
+  </style>
+</head>
+<body>
+  <main>
+    <a href="/" class="back-link">← Назад</a>
+    <header>
+      <h1>🎥 Стрим-режим</h1>
+      <p>Превратите стрим в вертикальные клипы с веб-камерой стримера</p>
+    </header>
+
+    <div class="form-section">
+      <div class="field-group">
+        <label for="stream-source">Источник стрима:</label>
+        <input type="text" id="stream-source" placeholder="Ссылка на Twitch VOD или путь к локальному файлу">
+      </div>
+      <div class="field-group">
+        <label for="streamer-name">Имя стримера (для заголовка):</label>
+        <input type="text" id="streamer-name" placeholder="Например: xQc">
+      </div>
+      <div class="field-group">
+        <label for="clip-duration">Длительность клипа (секунд):</label>
+        <input type="number" id="clip-duration" value="60" min="15" max="300">
+      </div>
+      <button id="process-stream-btn" class="btn-primary">Обработать стрим</button>
+    </div>
+
+    <div id="stream-progress" style="display:none; text-align:center; padding:2rem;">
+      <div class="spinner"></div>
+      <p id="stream-status">Обработка...</p>
+    </div>
+
+    <div id="stream-results" style="display:none; margin-top:2rem;">
+      <h3 style="margin-bottom:1rem;">Готовые клипы</h3>
+      <div id="stream-clips-grid" class="clips-grid"></div>
+    </div>
+  </main>
+
+  <script>
+    document.getElementById('process-stream-btn').addEventListener('click', async function() {
+      const source = document.getElementById('stream-source').value.trim();
+      const streamerName = document.getElementById('streamer-name').value.trim();
+      const clipDuration = parseInt(document.getElementById('clip-duration').value) || 60;
+
+      if (!source) { alert('Введите ссылку или путь к файлу'); return; }
+      if (!streamerName) { alert('Введите имя стримера'); return; }
+
+      const btn = this;
+      btn.disabled = true;
+      const progressDiv = document.getElementById('stream-progress');
+      progressDiv.style.display = 'block';
+      document.getElementById('stream-status').textContent = 'Обработка началась...';
+      document.getElementById('stream-results').style.display = 'none';
+
+      try {
+        const response = await fetch('/api/process_stream', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ source, streamer_name: streamerName, clip_duration: clipDuration })
+        });
+        const data = await response.json();
+        progressDiv.style.display = 'none';
+        btn.disabled = false;
+
+        if (data.error) {
+          alert('Ошибка: ' + data.error);
+          return;
+        }
+
+        const grid = document.getElementById('stream-clips-grid');
+        grid.innerHTML = '';
+        data.clips.forEach((clip, i) => {
+          const card = document.createElement('div');
+          card.className = 'clip-card';
+          card.innerHTML = `
+            <div class="clip-card-top">
+              <div class="clip-number">Клип ${i+1}</div>
+              <div style="color:var(--text-secondary);font-size:0.85rem;">${clip.duration.toFixed(1)}s</div>
+            </div>
+            <div class="clip-meta">
+              <span>${formatTime(clip.start_time)} — ${formatTime(clip.end_time)}</span>
+            </div>
+            <div style="margin-top:0.5rem;">
+              <a class="btn-download" href="/api/clips/${encodeURIComponent(clip.filename)}" download>⬇ Скачать</a>
+            </div>
+          `;
+          grid.appendChild(card);
+        });
+        document.getElementById('stream-results').style.display = 'block';
+      } catch (err) {
+        alert('Ошибка запроса: ' + err.message);
+        progressDiv.style.display = 'none';
+        btn.disabled = false;
+      }
+    });
+
+    function formatTime(seconds) {
+      const m = Math.floor(seconds / 60);
+      const s = Math.floor(seconds % 60);
+      return `${m}:${s.toString().padStart(2, '0')}`;
+    }
+  </script>
+</body>
+</html>
