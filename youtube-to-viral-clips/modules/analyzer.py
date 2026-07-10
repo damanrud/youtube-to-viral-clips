@@ -6,6 +6,10 @@ from pathlib import Path
 import hashlib
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import threading
+import logging
+
+# Настройка логирования
+logger = logging.getLogger(__name__)
 
 from config import (
     AI_PROVIDER, LLM_MODEL, OPENAI_MODEL, ANTHROPIC_MODEL,
@@ -16,7 +20,6 @@ from config import (
     ANALYSIS_MIN_CANDIDATES, ANALYSIS_EXPANSION_BATCH, ANALYSIS_TARGET_MOMENTS
 )
 
-# Import API libraries only if needed
 try:
     import openai
 except ImportError:
@@ -62,9 +65,10 @@ class ViralMomentAnalyzer:
         ),
     }
 
-    def __init__(self, provider: str = None, model_name: str = None, enable_cache: bool = True):
+    def __init__(self, provider: str = None, model_name: str = None, enable_cache: bool = True, score_scale: int = 100):
         self.provider = provider or AI_PROVIDER
         self.enable_cache = enable_cache
+        self.score_scale = score_scale
         self.cache_dir = Path(__file__).parent.parent / "cache" / "analysis"
         if self.enable_cache:
             self.cache_dir.mkdir(parents=True, exist_ok=True)
@@ -81,17 +85,31 @@ class ViralMomentAnalyzer:
         else:
             raise ValueError(f"Unknown AI provider: {self.provider}")
 
+        # Если старая шкала (10), преобразуем порог в новую (100)
+        if MIN_VIRAL_SCORE < 10:
+            self.min_score_threshold = MIN_VIRAL_SCORE * 10
+        else:
+            self.min_score_threshold = MIN_VIRAL_SCORE
+
     def _check_ollama_connection(self):
         try:
             models = ollama.list()
             model_names = [model['name'] for model in models['models']]
             if self.model_name not in model_names and f"{self.model_name}:latest" not in model_names:
-                print(f"Warning: Model '{self.model_name}' not found in Ollama.")
-                print(f"Available models: {', '.join(model_names)}")
-                print(f"Please run: ollama pull {self.model_name}")
+                logger.warning(
+                    f"Model '{self.model_name}' not found in Ollama. "
+                    f"Available models: {', '.join(model_names)}"
+                )
+                logger.info(f"Please run: ollama pull {self.model_name}")
+                # Пробуем найти альтернативу
+                for alt in ['llama3', 'mistral', 'gemma']:
+                    if alt in model_names or f"{alt}:latest" in model_names:
+                        logger.info(f"Using alternative model: {alt}")
+                        self.model_name = alt
+                        break
         except Exception as e:
-            print(f"Warning: Could not connect to Ollama: {e}")
-            print("Make sure Ollama is running (ollama serve)")
+            logger.warning(f"Could not connect to Ollama: {e}")
+            logger.info("Make sure Ollama is running (ollama serve)")
 
     def _check_openai_setup(self):
         if not openai:
@@ -110,7 +128,7 @@ class ViralMomentAnalyzer:
 
     def _generate_cache_key(self, transcript: Dict, chunk_duration: int, strategy: str, threshold: float) -> str:
         cache_data = {
-            'cache_schema_version': 6,
+            'cache_schema_version': 7,
             'duration': transcript.get('duration', 0),
             'full_text': transcript.get('full_text', ''),
             'segments': [
@@ -127,7 +145,7 @@ class ViralMomentAnalyzer:
             'sliding_window_size': SLIDING_WINDOW_SIZE,
             'sliding_overlap': SLIDING_OVERLAP,
             'score_threshold': threshold,
-            'min_viral_score': MIN_VIRAL_SCORE,
+            'min_viral_score': self.min_score_threshold,
             'provider': self.provider,
             'model': self.model_name,
             'temperature': AI_TEMPERATURE,
@@ -136,6 +154,9 @@ class ViralMomentAnalyzer:
             'min_candidates': ANALYSIS_MIN_CANDIDATES,
             'expansion_batch': ANALYSIS_EXPANSION_BATCH,
             'target_moments': ANALYSIS_TARGET_MOMENTS,
+            'score_scale': self.score_scale,
+            # Добавляем язык, чтобы кеш различался для разных языков
+            'language': transcript.get('language', 'en'),
         }
         cache_str = json.dumps(cache_data, sort_keys=True)
         return hashlib.sha256(cache_str.encode()).hexdigest()
@@ -148,10 +169,10 @@ class ViralMomentAnalyzer:
             try:
                 with open(cache_file, 'r', encoding='utf-8') as f:
                     cached_data = json.load(f)
-                print(f"✓ Loaded results from cache (key: {cache_key[:8]}...)")
+                logger.info(f"✓ Loaded results from cache (key: {cache_key[:8]}...)")
                 return cached_data
             except Exception as e:
-                print(f"Warning: Failed to load cache: {e}")
+                logger.warning(f"Failed to load cache: {e}")
                 return None
         return None
 
@@ -162,13 +183,13 @@ class ViralMomentAnalyzer:
         try:
             with open(cache_file, 'w', encoding='utf-8') as f:
                 json.dump(data, f, indent=2, ensure_ascii=False)
-            print(f"✓ Saved results to cache (key: {cache_key[:8]}...)")
+            logger.info(f"✓ Saved results to cache (key: {cache_key[:8]}...)")
         except Exception as e:
-            print(f"Warning: Failed to save cache: {e}")
+            logger.warning(f"Failed to save cache: {e}")
 
     def analyze_transcript(self, transcript: Dict, chunk_duration: int = 30, strategy: str = None) -> List[Dict]:
         strategy = strategy or CHUNK_STRATEGY
-        threshold = max(MIN_VIRAL_SCORE - 1.0, 4.0)
+        threshold = self.min_score_threshold - 5.0  # порог чуть ниже минимального
 
         cache_key = self._generate_cache_key(transcript, chunk_duration, strategy, threshold)
         cached_result = self._load_from_cache(cache_key)
@@ -193,12 +214,12 @@ class ViralMomentAnalyzer:
         prefilter_active = initial_limit < total_chunks
 
         if prefilter_active:
-            print(
+            logger.info(
                 f"Pre-ranked {total_chunks} chunks, starting with top "
                 f"{initial_limit} candidates before expanding if needed..."
             )
         else:
-            print(f"Analyzing {total_chunks} chunks for viral potential...")
+            logger.info(f"Analyzing {total_chunks} chunks for viral potential...")
         viral_moments = []
         analyzed_chunks = []
 
@@ -211,7 +232,7 @@ class ViralMomentAnalyzer:
             with progress_lock:
                 completed[0] += 1
                 current = completed[0]
-            print(f"Analyzed chunk {current}/{total_chunks} (score: {score:.1f})")
+            logger.info(f"Analyzed chunk {current}/{total_chunks} (score: {score:.1f}/{self.score_scale})")
             return chunk, score, reason
 
         cursor = 0
@@ -226,7 +247,7 @@ class ViralMomentAnalyzer:
                 break
 
             if prefilter_active:
-                print(
+                logger.info(
                     f"Analyzing ranked chunk batch {cursor + 1}-"
                     f"{cursor + len(batch)} of {total_chunks}..."
                 )
@@ -237,7 +258,7 @@ class ViralMomentAnalyzer:
                     try:
                         chunk, score, reason = future.result()
                     except Exception as e:
-                        print(f"Error analyzing chunk: {e}")
+                        logger.error(f"Error analyzing chunk: {e}")
                         continue
 
                     analyzed_chunks.append({
@@ -263,13 +284,13 @@ class ViralMomentAnalyzer:
                 continue
 
             if len(viral_moments) >= target_hits:
-                print(
+                logger.info(
                     f"Stopping after {cursor} ranked chunks; found "
                     f"{len(viral_moments)} strong candidates."
                 )
                 break
 
-            print(
+            logger.info(
                 f"Found {len(viral_moments)} strong candidates so far; "
                 f"expanding shortlist by {min(next_batch_size, len(ranked_chunks) - cursor)} chunks..."
             )
@@ -277,7 +298,7 @@ class ViralMomentAnalyzer:
         viral_moments.sort(key=lambda x: x['score'], reverse=True)
 
         if not viral_moments and analyzed_chunks:
-            print("No high-scoring moments found, selecting top chunks...")
+            logger.info("No high-scoring moments found, selecting top chunks...")
             top_candidates = sorted(
                 analyzed_chunks,
                 key=lambda item: item['score'],
@@ -300,7 +321,7 @@ class ViralMomentAnalyzer:
 
             viral_moments.sort(key=lambda x: x['score'], reverse=True)
 
-        print(f"Found {len(viral_moments)} potential viral moments")
+        logger.info(f"Found {len(viral_moments)} potential viral moments")
         self._save_to_cache(cache_key, viral_moments)
         return viral_moments
 
@@ -488,10 +509,66 @@ class ViralMomentAnalyzer:
 
         return chunks
 
-    # Новый метод для простого парсинга без JSON
+    def _build_analysis_prompt(self, text: str, language: str = 'en') -> str:
+        """Создаёт промпт для оценки виральности по 100-балльной шкале с критериями."""
+        lang_part = "на русском" if language == 'ru' else ("en français" if language == 'fr' else "in English")
+        criteria = """
+Критерии оценки (суммируйте баллы, максимум 100):
+1. Эмоциональный отклик (0–25): насколько фрагмент вызывает сильные эмоции (смех, удивление, шок, вдохновение).
+2. Уникальность/неожиданность (0–25): содержит ли он необычные повороты, редкие события, оригинальные идеи.
+3. Релевантность трендам (0–25): связан ли с актуальными мемами, темами, популярными обсуждениями.
+4. Возможность для мема/клипа (0–25): легко ли нарезать яркий момент, есть ли запоминающаяся фраза или действие.
+"""
+        prompt = f"""
+Проанализируй следующий фрагмент видео-транскрипта и определи, насколько он виральный (потенциально способен стать вирусным в социальных сетях).
+
+Фрагмент:
+{text}
+
+{criteria}
+
+Ответ напиши {lang_part} строго в формате:
+Score: [число от 0 до 100]
+Reason: [краткое обоснование оценки, 1–2 предложения]
+
+Не добавляй ничего лишнего, только Score и Reason.
+"""
+        return prompt
+
+    def _parse_score_from_response(self, response_text: str) -> float:
+        """Извлекает оценку из ответа модели, поддерживая различные форматы."""
+        # Ищем Score: число
+        score_match = re.search(r'Score\s*[:]?\s*(\d+(?:\.\d+)?)', response_text, re.IGNORECASE)
+        if score_match:
+            score = float(score_match.group(1))
+            # Если число больше 100, возможно это проценты, нормализуем
+            if score > 100:
+                score = min(score, 100.0)
+            return score
+
+        # Ищем число с /100
+        alt_match = re.search(r'(\d+(?:\.\d+)?)\s*[/]?\s*100', response_text)
+        if alt_match:
+            return float(alt_match.group(1))
+
+        # Ищем любое число в начале строки или после двоеточия
+        any_num = re.search(r'(?i)(?:score|оценка)\s*[:]?\s*(\d+(?:\.\d+)?)', response_text)
+        if any_num:
+            return float(any_num.group(1))
+
+        # Если ничего не найдено, пробуем найти первое число в тексте
+        first_num = re.search(r'\b(\d+(?:\.\d+)?)\b', response_text)
+        if first_num:
+            val = float(first_num.group(1))
+            if val <= 10:  # старая шкала
+                val *= 10
+            return min(100, max(0, val))
+
+        return 0.0
+
     def _analyze_chunk_simple(self, text: str, language: str = 'en') -> Tuple[float, str]:
         try:
-            prompt = VIRAL_ANALYSIS_PROMPT.format(transcript=text)
+            prompt = self._build_analysis_prompt(text, language)
 
             if self.provider == "ollama":
                 response_text = self._call_ollama(prompt)
@@ -502,66 +579,62 @@ class ViralMomentAnalyzer:
             else:
                 raise ValueError(f"Unknown provider: {self.provider}")
 
-            # Парсим Score и Reason
-            score = 0.0
-            reason = "No reason provided"
+            score = self._parse_score_from_response(response_text)
 
-            # Ищем Score (поддерживаем разные форматы)
-            score_match = re.search(r'Score\s*:\s*(\d+(?:\.\d+)?)', response_text, re.IGNORECASE)
-            if score_match:
-                score = float(score_match.group(1))
-
-            # Ищем Reason (берём всё после "Reason:")
-            reason_match = re.search(r'Reason\s*:\s*(.+)', response_text, re.IGNORECASE | re.DOTALL)
+            # Ищем Reason
+            reason_match = re.search(r'Reason\s*[:]?\s*(.+)', response_text, re.IGNORECASE | re.DOTALL)
             if reason_match:
-                reason = reason_match.group(1).strip()[:200]
+                reason = reason_match.group(1).strip()[:300]
+            else:
+                # Если Reason нет, берём текст после числа
+                num_match = re.search(r'\d+', response_text)
+                if num_match:
+                    after = response_text[num_match.end():].strip()
+                    if after:
+                        reason = after[:300]
+                    else:
+                        reason = "No reason provided"
+                else:
+                    reason = "No reason provided"
 
-            # Если не нашли, пробуем найти "Score:" с двоеточием на новой строке
-            if score == 0.0:
-                alt_score_match = re.search(r'Score\s*[:]\s*(\d+(?:\.\d+)?)', response_text, re.IGNORECASE)
-                if alt_score_match:
-                    score = float(alt_score_match.group(1))
-
-            # Ограничиваем score
-            score = min(10.0, max(0.0, score))
+            # Ограничиваем оценку от 0 до 100
+            score = min(100.0, max(0.0, score))
             return score, reason
 
         except Exception as e:
-            print(f"Error analyzing chunk: {e}")
+            logger.error(f"Error analyzing chunk: {e}")
             return 0.0, "Analysis failed"
 
-    # Оставляем старый _analyze_chunk только для обратной совместимости,
-    # но он теперь не используется (используется _analyze_chunk_simple)
+    # (старый _analyze_chunk не используется, оставлен для совместимости)
     def _analyze_chunk(self, text: str, language: str = 'en') -> Tuple[float, str, Dict]:
         score, reason = self._analyze_chunk_simple(text, language)
         return score, reason, {}
 
     def _extract_json(self, text: str) -> dict:
-        # Удаляем markdown-обёртки
         text = re.sub(r'```(?:json)?\s*', '', text, flags=re.IGNORECASE)
         text = re.sub(r'\s*```', '', text)
-        # Находим первый '{' и последний '}'
         start = text.find('{')
         end = text.rfind('}')
         if start == -1 or end == -1 or end <= start:
             raise ValueError("No JSON object found")
         json_str = text[start:end+1]
-        # Пытаемся распарсить
         try:
             return json.loads(json_str)
         except json.JSONDecodeError:
-            # Если не вышло, возможно, внутри есть лишние пробелы или некорректные кавычки
-            # пробуем заменить одинарные кавычки на двойные
             json_str = json_str.replace("'", '"')
             return json.loads(json_str)
 
     def _call_ollama(self, prompt: str) -> str:
-        response = ollama.chat(
-            model=self.model_name,
-            messages=[{'role': 'user', 'content': prompt}],
-            options={'temperature': AI_TEMPERATURE}
-        )
-        return response['message']['content']
+        try:
+            response = ollama.chat(
+                model=self.model_name,
+                messages=[{'role': 'user', 'content': prompt}],
+                options={'temperature': AI_TEMPERATURE}
+            )
+            return response['message']['content']
+        except Exception as e:
+            logger.error(f"Ollama call failed: {e}")
+            raise
 
     def _call_openai(self, prompt: str) -> str:
         kwargs = {
@@ -814,7 +887,15 @@ class ViralMomentAnalyzer:
             excerpt = moment.get('context', moment.get('text', ''))[:500]
             reason = moment.get('reason', '')
 
-            if language == 'fr':
+            if language == 'ru':
+                prompt = f"""Сгенерируй броский заголовок и описание для социальных сетей для этого отрывка видео.
+
+Отрывок: {excerpt}
+Контекст: {reason}
+
+Ответь ТОЛЬКО в формате JSON:
+{{"title": "Броский заголовок (макс 80 символов)", "description": "Описание 2-3 предложения с релевантными #хештегами"}}"""
+            elif language == 'fr':
                 prompt = f"""Génère un titre accrocheur et une description pour les réseaux sociaux à partir de cet extrait vidéo.
 
 Extrait : {excerpt}
@@ -853,12 +934,13 @@ Respond with ONLY valid JSON:
                     parsed = json.loads(json_text)
                     moment['title'] = parsed.get('title', reason[:80])[:80]
                     moment['description'] = parsed.get('description', reason)[:500]
-                except (json.JSONDecodeError, ValueError, AttributeError):
+                except (json.JSONDecodeError, ValueError, AttributeError) as e:
+                    logger.warning(f"Failed to parse JSON metadata: {e}. Using fallback.")
                     moment['title'] = reason[:80] if reason else 'Viral Moment'
                     moment['description'] = reason or ''
 
             except Exception as e:
-                print(f"Error generating metadata: {e}")
+                logger.error(f"Error generating metadata: {e}")
                 moment['title'] = reason[:80] if reason else 'Viral Moment'
                 moment['description'] = reason or ''
 
@@ -893,5 +975,5 @@ if __name__ == "__main__":
     for i, moment in enumerate(moments):
         print(f"\nMoment {i + 1}:")
         print(f"  Time: {moment['start']:.1f}s - {moment['end']:.1f}s")
-        print(f"  Score: {moment['score']}/10")
+        print(f"  Score: {moment['score']:.1f}/{analyzer.score_scale}")
         print(f"  Reason: {moment['reason']}")

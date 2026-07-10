@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
   <style>
+    /* Все стили остаются без изменений (я их не трогаю, чтобы сохранить компактность) */
     :root {
       --bg: #FAFAF8;
       --surface: #FFFFFF;
@@ -21,7 +22,6 @@
       --error: #B44A3F;
       --sidebar-width: 220px;
     }
-
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'DM Sans', sans-serif;
@@ -31,8 +31,6 @@
       display: flex;
       min-height: 100vh;
     }
-
-    /* ----- Sidebar ----- */
     .sidebar {
       width: var(--sidebar-width);
       background: var(--surface);
@@ -70,7 +68,6 @@
     .sidebar .nav-item:hover { background: var(--bg); color: var(--text); }
     .sidebar .nav-item.active { background: var(--accent); color: #fff; }
     .sidebar .nav-item .icon { margin-right: 0.75rem; }
-
     .sidebar-divider {
       margin-top: auto;
       border-top: 1px solid var(--border);
@@ -107,16 +104,12 @@
       background: var(--accent);
       color: #fff;
     }
-
-    /* ----- Main content ----- */
     .main-content {
       flex: 1;
       padding: 2rem 2.5rem;
       max-width: calc(100% - var(--sidebar-width));
       overflow-y: auto;
     }
-
-    /* ----- Общие стили ----- */
     .form-section {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -152,7 +145,6 @@
     }
     .source-tab:not(:last-child) { border-right: 1px solid var(--border); }
     .source-tab.active { background: var(--surface); color: var(--text); }
-
     label {
       display: block;
       font-size: 0.85rem;
@@ -178,7 +170,6 @@
     }
     .field-group { margin-bottom: 1.25rem; }
     .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-
     .checkbox-row {
       display: flex;
       align-items: center;
@@ -189,7 +180,6 @@
       width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer;
     }
     .checkbox-row label { margin-bottom: 0; font-size: 0.9rem; cursor: pointer; }
-
     .btn-primary {
       display: block;
       width: 100%;
@@ -212,7 +202,24 @@
       display: inline-block;
       width: auto;
     }
-
+    .spinner-small {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin-right: 0.5rem;
+      vertical-align: middle;
+    }
+    .btn-spinner-text {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
     .local-panel { display: none; }
     .local-panel.show { display: block; }
     .upload-zone {
@@ -229,8 +236,6 @@
     .upload-zone .upload-icon { font-size: 1.5rem; margin-bottom: 0.5rem; color: var(--text-secondary); }
     .upload-zone input[type="file"] { display: none; }
     .upload-filename { font-size: 0.85rem; color: var(--success); margin-top: 0.5rem; }
-
-    /* Progress */
     #progress-section { display: none; margin-bottom: 2rem; }
     .progress-card {
       background: var(--surface);
@@ -254,8 +259,6 @@
     .progress-dot.done { background: var(--success); }
     .progress-message { font-size: 1rem; font-weight: 500; margin-bottom: 0.5rem; }
     .progress-step-label { font-size: 0.85rem; color: var(--text-secondary); }
-
-    /* Непрерывный прогресс-бар с рисками */
     .progress-container {
       margin-top: 1rem;
     }
@@ -296,13 +299,11 @@
       margin-top: 0.25rem;
       text-align: center;
     }
-
     .download-bar-wrapper { margin-top: 1rem; display: none; }
     .download-bar-wrapper.show { display: block; }
     .download-bar-track { width: 100%; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
     .download-bar-fill { height: 100%; width: 0%; background: var(--accent); border-radius: 3px; transition: width 0.3s; }
     .download-bar-label { font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.375rem; }
-
     .spinner {
       display: inline-block;
       width: 20px; height: 20px;
@@ -312,9 +313,6 @@
       animation: spin 0.7s linear infinite;
       margin-bottom: 1rem;
     }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* Results */
     #results-section { display: none; }
     .results-header {
       display: flex;
@@ -331,7 +329,6 @@
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-
     .clips-grid {
       display: grid;
       grid-template-columns: 1fr;
@@ -348,7 +345,7 @@
     .clip-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
     .clip-card video {
       width: 100%;
-      max-width: 320px;          /* Уменьшаем плеер */
+      max-width: 320px;
       border-radius: 6px;
       margin-bottom: 1rem;
       background: #000;
@@ -387,7 +384,6 @@
     .clip-description .copy-hint { display: block; font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.375rem; }
     .clip-description.copied { border-color: var(--success); }
     .clip-description.copied .copy-hint { color: var(--success); }
-
     .clip-actions {
       display: flex;
       align-items: center;
@@ -409,9 +405,6 @@
     }
     .restyle-select:focus { border-color: var(--focus); }
     .restyle-select:disabled { opacity: 0.5; cursor: wait; }
-
-    /* Убираем кнопку скачивания, поэтому стиль для .btn-download не нужен */
-
     .publish-section {
       display: none;
       margin-top: 2rem;
@@ -426,7 +419,6 @@
       font-size: 1.5rem;
       margin-bottom: 1rem;
     }
-
     .reset-row { text-align: center; margin-top: 2rem; }
     .btn-reset {
       padding: 0.65rem 1.5rem;
@@ -441,7 +433,6 @@
       transition: border-color 0.2s, color 0.2s;
     }
     .btn-reset:hover { border-color: var(--text-secondary); color: var(--text); }
-
     .error-banner {
       display: none;
       background: #FEF2F1;
@@ -452,10 +443,8 @@
       font-size: 0.9rem;
       margin-bottom: 1.5rem;
     }
-
     .tab-content { display: none; }
     .tab-content.active { display: block; }
-
     .advanced-toggle {
       display: flex;
       align-items: center;
@@ -472,7 +461,43 @@
     .advanced-toggle.open svg { transform: rotate(90deg); }
     .advanced-options { display: none; }
     .advanced-options.show { display: block; }
-
+    .ollama-model-group { display: none; }
+    .ollama-model-group.show { display: block; }
+    .model-input-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .model-input-wrapper input {
+      flex: 1;
+    }
+    .model-input-wrapper button {
+      padding: 0.4rem 0.7rem;
+      font-size: 1rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--surface);
+      cursor: pointer;
+      transition: background 0.2s;
+      line-height: 1;
+    }
+    .model-input-wrapper button:hover {
+      background: var(--bg);
+    }
+    .model-input-wrapper button:active {
+      transform: scale(0.95);
+    }
+    .model-input-wrapper .btn-add {
+      color: var(--success);
+    }
+    .model-input-wrapper .btn-del {
+      color: var(--error);
+    }
+    .no-models-msg {
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+      padding: 0.3rem 0;
+    }
     @media (max-width: 768px) {
       body { flex-direction: column; }
       .sidebar {
@@ -534,7 +559,6 @@
 
       <div id="error-banner" class="error-banner"></div>
 
-      <!-- Форма -->
       <div id="form-section">
         <div class="form-section">
           <div class="section-label">Video Source</div>
@@ -584,19 +608,34 @@
               <div class="field-group">
                 <label for="provider-select">AI Provider</label>
                 <select id="provider-select">
-                  <option value="ollama">Ollama (local)</option>
-                  <option value="openai" selected>OpenAI</option>
+                  <option value="ollama" selected>Ollama (local)</option>
+                  <option value="openai">OpenAI</option>
                   <option value="anthropic">Anthropic</option>
                 </select>
               </div>
               <div class="field-group">
                 <label for="score-select">Min. Virality Score</label>
                 <select id="score-select">
-                  <option value="5">5.0</option><option value="6">6.0</option><option value="6.5">6.5</option>
-                  <option value="7" selected>7.0</option><option value="7.5">7.5</option>
-                  <option value="8">8.0</option><option value="9">9.0</option>
+                  <option value="10">10</option><option value="15">15</option><option value="20">20</option>
+                  <option value="25">25</option><option value="30">30</option><option value="35">35</option>
+                  <option value="40">40</option><option value="45">45</option><option value="50">50</option>
+                  <option value="55">55</option><option value="60">60</option><option value="65">65</option>
+                  <option value="70" selected>70</option><option value="75">75</option><option value="80">80</option>
+                  <option value="85">85</option><option value="90">90</option><option value="95">95</option>
+                  <option value="100">100</option>
                 </select>
               </div>
+            </div>
+            <!-- Блок выбора модели для Ollama (основной) -->
+            <div class="ollama-model-group show" id="ollama-model-group">
+              <label for="ollama-model-input">Модель Ollama:</label>
+              <div class="model-input-wrapper">
+                <input list="ollama-model-list" id="ollama-model-input" placeholder="Выберите или введите название модели">
+                <datalist id="ollama-model-list"></datalist>
+                <button class="btn-add" id="ollama-add-model" title="Добавить модель">+</button>
+                <button class="btn-del" id="ollama-del-model" title="Удалить выбранную модель">🗑️</button>
+              </div>
+              <div id="ollama-no-models-msg" class="no-models-msg" style="display:none;">Нет доступных моделей</div>
             </div>
             <div class="checkbox-row">
               <input type="checkbox" id="vertical-check" checked>
@@ -616,6 +655,13 @@
               <label for="style-select">Subtitle Style</label>
               <select id="style-select">
                 <option value="Submagic Yellow" selected>Submagic Yellow</option>
+              </select>
+            </div>
+            <div class="field-group" style="margin-top:0.75rem;">
+              <label for="language-select">Язык метаданных:</label>
+              <select id="language-select">
+                <option value="en">English</option>
+                <option value="ru" selected>Русский</option>
               </select>
             </div>
           </div>
@@ -664,7 +710,7 @@
         </div>
         <div class="clips-grid" id="clips-grid"></div>
 
-        <!-- Секция публикации (общая, оставлена для ручного ввода) -->
+        <!-- Секция публикации (общая) -->
         <div id="publish-section" class="publish-section">
           <h3>Опубликовать видео (ручной ввод)</h3>
           <div class="field-group">
@@ -702,18 +748,101 @@
     <div id="tab-stream" class="tab-content">
       <header style="margin-bottom:2rem;">
         <h1 style="font-family:'Instrument Serif',serif;font-weight:400;font-style:italic;font-size:2.5rem;">🎥 Stream Mode</h1>
-        <p style="color:var(--text-secondary);">Превратите стрим в вертикальные клипы с веб-камерой стримера</p>
+        <p style="color:var(--text-secondary);">Превратите стрим или видео в вертикальные клипы с веб-камерой стримера</p>
       </header>
       <div class="form-section">
-        <div class="field-group">
-          <label for="stream-source">Источник стрима:</label>
-          <input type="text" id="stream-source" placeholder="Ссылка на Twitch VOD или путь к локальному файлу">
+        <div class="source-tabs" id="stream-source-tabs">
+          <button class="source-tab active" data-stream-source="url" type="button">Ссылка</button>
+          <button class="source-tab" data-stream-source="local" type="button">Локальный файл</button>
+        </div>
+        <div id="stream-url-panel">
+          <div class="field-group">
+            <label for="stream-source">Ссылка на видео/стрим:</label>
+            <input type="text" id="stream-source" placeholder="https://www.youtube.com/watch?v=... или Twitch VOD">
+          </div>
+        </div>
+        <div id="stream-local-panel" style="display:none;">
+          <div class="field-group">
+            <label for="stream-local-select">Выберите из downloads:</label>
+            <select id="stream-local-select"><option value="">Загрузка...</option></select>
+          </div>
         </div>
         <div class="field-group">
           <label for="streamer-name">Имя стримера (для заголовка):</label>
           <input type="text" id="streamer-name" placeholder="Например: xQc">
         </div>
-        <button id="process-stream-btn" class="btn-primary">Обработать стрим</button>
+
+        <!-- ===== НАСТРОЙКИ AI ДЛЯ СТРИМ-РЕЖИМА ===== -->
+        <div style="margin-top:1.5rem; border-top:1px solid var(--border); padding-top:1.5rem;">
+          <div class="advanced-toggle" id="stream-advanced-toggle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            <span>Варианты обработки</span>
+          </div>
+          <div class="advanced-options" id="stream-advanced-options">
+            <div class="field-row" style="margin-bottom:1rem;">
+              <div class="field-group">
+                <label for="stream-provider-select">AI Provider</label>
+                <select id="stream-provider-select">
+                  <option value="ollama" selected>Ollama (local)</option>
+                  <option value="openai">OpenAI</option>
+                  <option value="anthropic">Anthropic</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label for="stream-score-select">Min. Virality Score</label>
+                <select id="stream-score-select">
+                  <option value="10">10</option><option value="15">15</option><option value="20">20</option>
+                  <option value="25">25</option><option value="30">30</option><option value="35">35</option>
+                  <option value="40">40</option><option value="45">45</option><option value="50">50</option>
+                  <option value="55">55</option><option value="60">60</option><option value="65">65</option>
+                  <option value="70" selected>70</option><option value="75">75</option><option value="80">80</option>
+                  <option value="85">85</option><option value="90">90</option><option value="95">95</option>
+                  <option value="100">100</option>
+                </select>
+              </div>
+            </div>
+            <!-- Блок выбора модели для Ollama (стрим) -->
+            <div class="ollama-model-group show" id="stream-ollama-model-group">
+              <label for="stream-ollama-model-input">Модель Ollama:</label>
+              <div class="model-input-wrapper">
+                <input list="stream-ollama-model-list" id="stream-ollama-model-input" placeholder="Выберите или введите название модели">
+                <datalist id="stream-ollama-model-list"></datalist>
+                <button class="btn-add" id="stream-ollama-add-model" title="Добавить модель">+</button>
+                <button class="btn-del" id="stream-ollama-del-model" title="Удалить выбранную модель">🗑️</button>
+              </div>
+              <div id="stream-ollama-no-models-msg" class="no-models-msg" style="display:none;">Нет доступных моделей</div>
+            </div>
+            <div class="checkbox-row">
+              <input type="checkbox" id="stream-vertical-check" checked>
+              <label for="stream-vertical-check">Vertical format (9:16)</label>
+            </div>
+            <div class="checkbox-row">
+              <input type="checkbox" id="stream-subtitles-check" checked>
+              <label for="stream-subtitles-check">Add subtitles</label>
+            </div>
+            <div class="field-group" style="margin-top:0.75rem;">
+              <label for="stream-banner-select">Баннер (сверху, 30%):</label>
+              <select id="stream-banner-select" name="banner">
+                <option value="none">Без баннера</option>
+              </select>
+            </div>
+            <div class="field-group" id="stream-subtitle-style-group" style="margin-top:0.75rem;">
+              <label for="stream-style-select">Subtitle Style</label>
+              <select id="stream-style-select">
+                <option value="Submagic Yellow" selected>Submagic Yellow</option>
+              </select>
+            </div>
+            <div class="field-group" style="margin-top:0.75rem;">
+              <label for="stream-language-select">Язык метаданных:</label>
+              <select id="stream-language-select">
+                <option value="en">English</option>
+                <option value="ru" selected>Русский</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <button id="process-stream-btn" class="btn-primary" style="margin-top:1.5rem;">Обработать стрим</button>
       </div>
       <div id="stream-progress" style="display:none; text-align:center; padding:2rem;">
         <div class="spinner"></div>
@@ -774,7 +903,7 @@
     const submitBtn = $('#submit-btn');
     const resetBtn = $('#reset-btn');
 
-    // ---- Source tabs ----
+    // ---- Source tabs (основной режим) ----
     $$('.source-tab').forEach(tab => {
       tab.addEventListener('click', () => {
         $$('.source-tab').forEach(t => t.classList.remove('active'));
@@ -786,7 +915,7 @@
       });
     });
 
-    // ---- Advanced toggle ----
+    // ---- Advanced toggle (основной) ----
     const advToggle = document.getElementById('advanced-toggle');
     const advOptions = document.getElementById('advanced-options');
     advToggle.addEventListener('click', () => {
@@ -794,8 +923,135 @@
       advOptions.classList.toggle('show');
     });
 
-    $('#subtitles-check').addEventListener('change', (e) => {
-      $('#subtitle-style-group').style.display = e.target.checked ? 'block' : 'none';
+    // ---- Advanced toggle (стрим) ----
+    const streamAdvToggle = document.getElementById('stream-advanced-toggle');
+    const streamAdvOptions = document.getElementById('stream-advanced-options');
+    streamAdvToggle.addEventListener('click', () => {
+      streamAdvToggle.classList.toggle('open');
+      streamAdvOptions.classList.toggle('show');
+    });
+
+    // ---- Показ/скрытие блока модели для Ollama (основной) ----
+    document.getElementById('provider-select').addEventListener('change', function() {
+      const group = document.getElementById('ollama-model-group');
+      group.style.display = this.value === 'ollama' ? 'block' : 'none';
+    });
+    if (document.getElementById('provider-select').value === 'ollama') {
+      document.getElementById('ollama-model-group').style.display = 'block';
+    }
+
+    // ---- Показ/скрытие блока модели для Ollama (стрим) ----
+    document.getElementById('stream-provider-select').addEventListener('change', function() {
+      const group = document.getElementById('stream-ollama-model-group');
+      group.style.display = this.value === 'ollama' ? 'block' : 'none';
+    });
+    if (document.getElementById('stream-provider-select').value === 'ollama') {
+      document.getElementById('stream-ollama-model-group').style.display = 'block';
+    }
+
+    // ===================== ЛОГИКА РАБОТЫ С МОДЕЛЯМИ =====================
+    const STORAGE_KEY_MAIN = 'ollama_models_main';
+    const STORAGE_KEY_STREAM = 'ollama_models_stream';
+
+    function getLocalModels(storageKey) {
+      try {
+        const data = localStorage.getItem(storageKey);
+        return data ? JSON.parse(data) : [];
+      } catch { return []; }
+    }
+
+    function setLocalModels(storageKey, models) {
+      localStorage.setItem(storageKey, JSON.stringify(models));
+    }
+
+    function updateModelUI(datalistId, inputId, msgId, storageKey, serverModels) {
+      const datalist = document.getElementById(datalistId);
+      const input = document.getElementById(inputId);
+      const msg = document.getElementById(msgId);
+      if (!datalist || !input) return;
+
+      const local = getLocalModels(storageKey);
+      const allModels = [...new Set([...serverModels, ...local])];
+
+      datalist.innerHTML = '';
+      if (allModels.length === 0) {
+        if (msg) msg.style.display = 'block';
+        input.placeholder = 'Нет доступных моделей';
+        return;
+      } else {
+        if (msg) msg.style.display = 'none';
+        input.placeholder = 'Выберите или введите название модели';
+        allModels.forEach(model => {
+          const opt = document.createElement('option');
+          opt.value = model;
+          datalist.appendChild(opt);
+        });
+      }
+    }
+
+    async function loadOllamaModels() {
+      try {
+        const res = await fetch('/api/ollama/models');
+        const data = await res.json();
+        const serverModels = data.models || [];
+
+        updateModelUI('ollama-model-list', 'ollama-model-input', 'ollama-no-models-msg', STORAGE_KEY_MAIN, serverModels);
+        updateModelUI('stream-ollama-model-list', 'stream-ollama-model-input', 'stream-ollama-no-models-msg', STORAGE_KEY_STREAM, serverModels);
+      } catch (e) {
+        console.warn('Could not load Ollama models:', e);
+        document.getElementById('ollama-no-models-msg').style.display = 'block';
+        document.getElementById('stream-ollama-no-models-msg').style.display = 'block';
+      }
+    }
+
+    function addModel(storageKey) {
+      const modelName = prompt('Введите название модели Ollama:');
+      if (!modelName || modelName.trim() === '') return;
+      const trimmed = modelName.trim();
+      let local = getLocalModels(storageKey);
+      if (!local.includes(trimmed)) {
+        local.push(trimmed);
+        setLocalModels(storageKey, local);
+        loadOllamaModels();
+        const inputId = storageKey === STORAGE_KEY_MAIN ? 'ollama-model-input' : 'stream-ollama-model-input';
+        document.getElementById(inputId).value = '';
+      } else {
+        alert('Модель уже есть в списке.');
+      }
+    }
+
+    function deleteModel(inputId, storageKey) {
+      const input = document.getElementById(inputId);
+      const modelName = input.value.trim();
+      if (!modelName) return;
+      let local = getLocalModels(storageKey);
+      if (local.includes(modelName)) {
+        local = local.filter(m => m !== modelName);
+        setLocalModels(storageKey, local);
+        if (local.length === 0) {
+          input.value = '';
+        }
+        loadOllamaModels();
+      } else {
+        alert('Модель не найдена в вашем списке. Возможно, она из серверного списка, её нельзя удалить.');
+      }
+    }
+
+    document.getElementById('ollama-add-model').addEventListener('click', function(e) {
+      e.preventDefault();
+      addModel(STORAGE_KEY_MAIN);
+    });
+    document.getElementById('ollama-del-model').addEventListener('click', function(e) {
+      e.preventDefault();
+      deleteModel('ollama-model-input', STORAGE_KEY_MAIN);
+    });
+    document.getElementById('stream-ollama-add-model').addEventListener('click', function(e) {
+      e.preventDefault();
+      addModel(STORAGE_KEY_STREAM);
+    });
+    document.getElementById('stream-ollama-del-model').addEventListener('click', function(e) {
+      e.preventDefault();
+      deleteModel('stream-ollama-model-input', STORAGE_KEY_STREAM);
     });
 
     // ---- Upload zone ----
@@ -847,6 +1103,15 @@
           if (name === 'Submagic Yellow') opt.selected = true;
           sel.appendChild(opt);
         }
+        const streamSel = $('#stream-style-select');
+        streamSel.innerHTML = '';
+        for (const [name, desc] of Object.entries(styles)) {
+          const opt = document.createElement('option');
+          opt.value = name;
+          opt.textContent = `${name} — ${desc}`;
+          if (name === 'Submagic Yellow') opt.selected = true;
+          streamSel.appendChild(opt);
+        }
       } catch (_) {}
     }
 
@@ -872,23 +1137,33 @@
       } catch (_) {}
     }
 
+    // ============= ОБНОВЛЁННАЯ ФУНКЦИЯ loadBanners() =============
     async function loadBanners() {
       try {
         const res = await fetch('/api/banners');
         const banners = await res.json();
-        const sel = $('#banner-select');
+        const sel = document.getElementById('banner-select');
+        sel.innerHTML = '<option value="none">Без баннера</option>';
         banners.forEach(banner => {
           const opt = document.createElement('option');
           opt.value = banner;
           opt.textContent = banner;
           sel.appendChild(opt);
         });
+        const streamSel = document.getElementById('stream-banner-select');
+        streamSel.innerHTML = '<option value="none">Без баннера</option>';
+        banners.forEach(banner => {
+          const opt = document.createElement('option');
+          opt.value = banner;
+          opt.textContent = banner;
+          streamSel.appendChild(opt);
+        });
       } catch (err) {
         console.warn('Could not load banners:', err);
       }
     }
 
-    // ---- Submit ----
+    // ---- Submit (основной режим) ----
     submitBtn.addEventListener('click', () => {
       if (state === 'processing') return;
       hideError();
@@ -903,7 +1178,11 @@
         add_subtitles: $('#subtitles-check').checked,
         subtitle_style: $('#style-select').value,
         banner: $('#banner-select').value,
+        language: document.getElementById('language-select').value
       };
+      if (payload.provider === 'ollama') {
+        payload.ollama_model = document.getElementById('ollama-model-input').value.trim() || '';
+      }
       if (currentSource === 'youtube' && !payload.url) {
         showError('Please enter a YouTube URL.');
         return;
@@ -923,7 +1202,7 @@
       startProcessing(payload);
     });
 
-    // ---- Processing ----
+    // ---- Processing (основной) ----
     function startProcessing(payload) {
       state = 'processing';
       formSection.style.display = 'none';
@@ -1038,15 +1317,14 @@
     // ---- Глобальные переменные для публикации клипов ----
     let _clipsData = [];
 
-    // ---- Функция публикации отдельного клипа ----
-    async function publishClip(index) {
+    // ---- Функция публикации отдельного клипа (с индикатором загрузки) ----
+    async function publishClip(index, btn) {
       const clip = _clipsData[index];
       if (!clip || !clip.path) {
         alert('Видео не найдено');
         return;
       }
 
-      // Проверяем авторизацию
       try {
         const statusRes = await fetch('/api/youtube/status');
         const statusData = await statusRes.json();
@@ -1061,7 +1339,11 @@
 
       const title = clip.title || 'Viral Clip';
       const description = clip.description || '';
-      const tags = ['#shorts', '#viral']; // можно взять из clip, если есть
+      const tags = ['#shorts', '#viral'];
+
+      const originalText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = `<span class="btn-spinner-text"><span class="spinner-small"></span>Загрузка...</span>`;
 
       try {
         const response = await fetch('/api/publish', {
@@ -1073,7 +1355,7 @@
             description: description,
             tags: tags,
             platform: 'youtube',
-            privacy: 'private'  // черновик
+            privacy: 'private'
           })
         });
         const data = await response.json();
@@ -1084,16 +1366,19 @@
         }
       } catch (err) {
         alert('❌ Ошибка запроса: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
       }
     }
 
-    // ---- Отображение результатов (с видеоплеером и кнопкой публикации) ----
+    // ---- Отображение результатов ----
     function showResults(data) {
       resultsSec.style.display = 'block';
       $('#result-video-title').textContent = data.title || '';
       const grid = $('#clips-grid');
       grid.innerHTML = '';
-      _clipsData = data.clips;  // сохраняем все клипы
+      _clipsData = data.clips;
 
       data.clips.forEach((clip, i) => {
         const startStr = formatTime(clip.start);
@@ -1101,7 +1386,6 @@
         const card = document.createElement('div');
         card.className = 'clip-card';
 
-        // Видео
         const videoWrapper = document.createElement('div');
         videoWrapper.style.marginBottom = '0.75rem';
         const video = document.createElement('video');
@@ -1117,7 +1401,6 @@
         videoWrapper.appendChild(video);
         card.appendChild(videoWrapper);
 
-        // Информация
         const infoHtml = `
           <div class="clip-card-top">
             <div class="clip-number">Clip ${i + 1}</div>
@@ -1140,7 +1423,7 @@
                 `<option value="${escapeAttr(name)}">${escapeHtml(name)}</option>`
               ).join('')}
             </select>
-            <button class="btn-primary btn-small" onclick="publishClip(${i})">Сохранить в черновик YouTube</button>
+            <button class="btn-primary btn-small" onclick="publishClip(${i}, this)">Сохранить в черновик YouTube</button>
           </div>
         `;
         const infoDiv = document.createElement('div');
@@ -1151,11 +1434,9 @@
         grid.appendChild(card);
       });
 
-      // Показываем общую секцию публикации (для ручного ввода)
       if (data.clips && data.clips.length > 0) {
         const pubSection = document.getElementById('publish-section');
         if (pubSection) pubSection.style.display = 'block';
-        // сохраняем путь к первому видео для общей публикации
         currentVideoPath = data.clips[0].path;
       }
     }
@@ -1212,10 +1493,6 @@
         });
         const data = await res.json();
         if (data.error) throw new Error(data.error);
-        // Обновляем ссылку на видео (если нужно)
-        const dlLink = document.querySelector(`#dl-clip-${clipIndex}`);
-        if (dlLink) dlLink.href = `/api/clips/${encodeURIComponent(data.filename)}`;
-        // Также обновляем плеер, если есть
         const card = selectEl.closest('.clip-card');
         if (card) {
           const video = card.querySelector('video');
@@ -1249,9 +1526,14 @@
       });
     }
 
-    // ---- Обработчики общей публикации ----
+    // ---- Обработчики общей публикации (с индикатором загрузки) ----
     document.getElementById('pub-btn').addEventListener('click', async function() {
       if (!currentVideoPath) { alert('Нет готового видео'); return; }
+      const btn = this;
+      const originalText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = `<span class="btn-spinner-text"><span class="spinner-small"></span>Публикация...</span>`;
+
       const title = document.getElementById('pub-title').value || '';
       const desc = document.getElementById('pub-desc').value || '';
       const tagsRaw = document.getElementById('pub-tags').value || '';
@@ -1271,11 +1553,19 @@
         }
       } catch (err) {
         alert('❌ Ошибка запроса: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
       }
     });
 
     document.getElementById('save-txt-btn').addEventListener('click', async function() {
       if (!currentVideoPath) { alert('Нет готового видео'); return; }
+      const btn = this;
+      const originalText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = `<span class="btn-spinner-text"><span class="spinner-small"></span>Сохранение...</span>`;
+
       const title = document.getElementById('pub-title').value || 'Без названия';
       const desc = document.getElementById('pub-desc').value || '';
       const tagsRaw = document.getElementById('pub-tags').value || '';
@@ -1295,6 +1585,9 @@
         }
       } catch (err) {
         alert('❌ Ошибка запроса: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
       }
     });
 
@@ -1331,11 +1624,67 @@
     }
 
     // ---- Stream Mode ----
+    const streamTabs = document.querySelectorAll('#stream-source-tabs .source-tab');
+    streamTabs.forEach(tab => {
+      tab.addEventListener('click', function() {
+        streamTabs.forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+        const type = this.dataset.streamSource;
+        document.getElementById('stream-url-panel').style.display = type === 'url' ? 'block' : 'none';
+        document.getElementById('stream-local-panel').style.display = type === 'local' ? 'block' : 'none';
+        if (type === 'local') loadStreamDownloads();
+      });
+    });
+
+    async function loadStreamDownloads() {
+      try {
+        const res = await fetch('/api/downloads');
+        const files = await res.json();
+        const sel = document.getElementById('stream-local-select');
+        sel.innerHTML = '';
+        if (files.length === 0) {
+          const opt = document.createElement('option');
+          opt.value = '';
+          opt.textContent = 'Нет файлов в /downloads';
+          sel.appendChild(opt);
+        } else {
+          files.forEach(f => {
+            const opt = document.createElement('option');
+            opt.value = f;
+            opt.textContent = f;
+            sel.appendChild(opt);
+          });
+        }
+      } catch (_) {}
+    }
+
     document.getElementById('process-stream-btn').addEventListener('click', function() {
-      const source = document.getElementById('stream-source').value.trim();
       const streamerName = document.getElementById('streamer-name').value.trim();
-      if (!source) { alert('Введите ссылку или путь к файлу'); return; }
       if (!streamerName) { alert('Введите имя стримера'); return; }
+
+      const sourceType = document.querySelector('#stream-source-tabs .source-tab.active').dataset.streamSource;
+      let payload = { streamer_name: streamerName };
+
+      if (sourceType === 'url') {
+        const source = document.getElementById('stream-source').value.trim();
+        if (!source) { alert('Введите ссылку'); return; }
+        payload.source = source;
+      } else {
+        const localFile = document.getElementById('stream-local-select').value;
+        if (!localFile) { alert('Выберите файл из downloads'); return; }
+        payload.local_file = localFile;
+      }
+
+      payload.provider = document.getElementById('stream-provider-select').value;
+      payload.min_score = parseFloat(document.getElementById('stream-score-select').value);
+      if (payload.provider === 'ollama') {
+        payload.ollama_model = document.getElementById('stream-ollama-model-input').value.trim() || '';
+      }
+      payload.vertical_format = document.getElementById('stream-vertical-check').checked;
+      payload.add_subtitles = document.getElementById('stream-subtitles-check').checked;
+      payload.subtitle_style = document.getElementById('stream-style-select').value;
+      payload.banner = document.getElementById('stream-banner-select').value;
+      payload.language = document.getElementById('stream-language-select').value;
 
       const btn = this;
       btn.disabled = true;
@@ -1352,7 +1701,7 @@
       fetch('/api/process_stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ source, streamer_name: streamerName })
+        body: JSON.stringify(payload)
       }).then(response => {
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
@@ -1446,6 +1795,7 @@
     loadStyles();
     loadBanners();
     loadDownloads();
+    loadOllamaModels();
     updateYoutubeSidebarStatus();
     updateTiktokSidebarStatus();
   </script>

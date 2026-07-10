@@ -19,22 +19,21 @@ for dir_path in [DOWNLOADS_DIR, OUTPUTS_DIR, TRANSCRIPTS_DIR]:
     dir_path.mkdir(exist_ok=True)
 
 VIDEO_QUALITY = "720p"
-# large-v3-turbo: near large-v3 accuracy at ~8x its speed. Critical for
-# non-English content - "base" produces unusable French subtitles.
 WHISPER_MODEL = "large-v3-turbo"
-WHISPER_BACKEND = "faster-whisper"  # Options: "faster-whisper", "openai-whisper"
-WHISPER_DEVICE = "cpu"  # Set to "cuda" on GPU VPS instances
-WHISPER_COMPUTE_TYPE = "int8"  # Good CPU default for faster-whisper
-WHISPER_VAD_FILTER = True  # Keep timestamps stable for clipping by default
+WHISPER_BACKEND = "faster-whisper"
+WHISPER_DEVICE = "cpu"
+WHISPER_COMPUTE_TYPE = "int8"
+WHISPER_VAD_FILTER = True
 
 # ========== НАСТРОЙКИ AI ==========
-AI_PROVIDER = "ollama"  # <--- ИЗМЕНЕНО: теперь используем локальный Ollama
-LLM_MODEL = "deepseek-r1:14b"  # <--- ИЗМЕНЕНО: новая мощная модель
-OPENAI_MODEL = "gpt-5-mini-2025-08-07"  # For OpenAI (не используется)
-ANTHROPIC_MODEL = "claude-3-opus-20240229"  # For Anthropic (не используется)
-AI_TEMPERATURE = 0.0  # Set to 0 for deterministic outputs
+AI_PROVIDER = "ollama"
+# Рекомендую использовать модели, которые хорошо работают с русским языком
+# Например: 'llama3', 'mistral', 'gemma', 'qwen'
+LLM_MODEL = "llama3"  # или 'deepseek-r1:14b', если она есть
+OPENAI_MODEL = "gpt-5-mini-2025-08-07"
+ANTHROPIC_MODEL = "claude-3-opus-20240229"
+AI_TEMPERATURE = 0.0
 
-# API Keys (set via environment variables) – для OpenAI/Anthropic, не нужны для Ollama
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 
@@ -42,6 +41,7 @@ MIN_CLIP_LENGTH = 15
 MAX_CLIP_LENGTH = 60
 CLIP_BUFFER_SECONDS = 2
 
+# Стили субтитров (без изменений)
 SUBTITLE_STYLE = {
     "font": "Arial-Bold",
     "fontsize": 80,
@@ -62,7 +62,6 @@ VERTICAL_SUBTITLE_STYLE = {
     "method": "caption"
 }
 
-# Subtitle style templates (без изменений)
 SUBTITLE_TEMPLATES = {
     "Classic": {
         "description": "White text with black outline",
@@ -245,18 +244,8 @@ SUBTITLE_TEMPLATES = {
     }
 }
 
-# ========== НОВЫЙ ПРОМПТ ДЛЯ ДЕТАЛИЗИРОВАННОГО ВИРАЛЬНОГО СКОРА ==========
-VIRAL_ANALYSIS_PROMPT = """Analyze this transcript segment for viral potential. 
-Score from 0-10 based on: humor, emotion, surprisingness, quotability.
-Provide a brief explanation of why this could go viral.
-
-Transcript:
-{transcript}
-
-Response format:
-Score: [0-10]
-Reason: [Brief explanation]
-"""
+# Больше не используется – анализатор использует свой промпт
+VIRAL_ANALYSIS_PROMPT = ""
 
 MAX_VIDEO_SIZE_MB = 500
 SUPPORTED_FORMATS = [".mp4", ".webm", ".mkv"]
@@ -271,13 +260,14 @@ WHISPER_BEST_OF = 5
 WHISPER_TEMPERATURE = (0.0, 0.2)
 
 DEFAULT_NUM_CLIPS = 5
-MIN_VIRAL_SCORE = 6.0
+# Минимальный балл теперь по 100-балльной шкале (было 7.0)
+MIN_VIRAL_SCORE = 70
 
 # Analysis Settings
-CHUNK_STRATEGY = "sliding"  # Options: "smart", "sliding", "semantic", "fixed"
-CHUNK_DURATION = 30  # For fixed strategy
-SLIDING_WINDOW_SIZE = 45  # For sliding strategy
-SLIDING_OVERLAP = 15  # For sliding strategy
+CHUNK_STRATEGY = "sliding"
+CHUNK_DURATION = 30
+SLIDING_WINDOW_SIZE = 45
+SLIDING_OVERLAP = 15
 ANALYSIS_PREFILTER_ENABLED = True
 ANALYSIS_CANDIDATE_RATIO = 0.45
 ANALYSIS_MIN_CANDIDATES = 24
@@ -285,4 +275,4 @@ ANALYSIS_EXPANSION_BATCH = 12
 ANALYSIS_TARGET_MOMENTS = 5
 
 VIDEO_INFO_CACHE_SIZE = 128
-CROP_ASPECT = 0.7  # для более широкого кадра в вертикальном видео
+CROP_ASPECT = 0.7
