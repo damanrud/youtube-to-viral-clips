@@ -20,6 +20,6 @@ This tool downloads YouTube videos, transcribes them using OpenAI Whisper, analy
 
 ## Requirements
 
-- Python 3.8+
+- Python
 - FFmpeg
-- Ollama (for local AI) or API keys for OpenAI/Anthropic
+- Ollama for local AI or API keys for OpenAI/Anthropic
